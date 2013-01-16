@@ -28,5 +28,7 @@ setup(name='collective.contentfiles2aws',
       ],
       entry_points="""
       # -*- Entry points: -*-
+      [z3c.autoinclude.plugin]
+      target = plone
       """,
       )

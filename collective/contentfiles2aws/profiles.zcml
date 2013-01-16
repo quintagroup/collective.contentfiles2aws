@@ -1,0 +1,12 @@
+<configure xmlns="http://namespace.zope.org/zope"
+           xmlns:genericsetup="http://namespaces.zope.org/genericsetup">
+
+  <genericsetup:registerProfile
+      name="default"
+      title="collective.contentfiles2aws"
+      directory="profiles/default"
+      description="Installs the collective.contentfiles2aws package"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+</configure>
