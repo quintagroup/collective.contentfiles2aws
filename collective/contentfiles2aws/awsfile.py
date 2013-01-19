@@ -2,6 +2,8 @@ from zope.component import getUtility
 
 from Globals import DTMLFile
 from OFS.Image import File, cookId
+from AccessControl import ClassSecurityInfo
+from AccessControl.Permissions import view as View
 
 from collective.contentfiles2aws.interfaces import IAWSUtility
 
@@ -41,10 +43,41 @@ class AWSFile(File):
     meta_type = 'AWS File'
     data = ''
 
+    security = ClassSecurityInfo()
+
     def __init__(self, id, title, file, content_type='', precondition=''):
-        super(AWSFile, self).__init__(id, title, file,
-                                      content_type=content_type,
-                                      precondition=precondition)
+        self.__name__=id
+        self.title=title
+        self.precondition=precondition
+        self.size = 0
+        self.content_type = content_type
+        self.uploaded_source_id = None
+
+        #upload file to remote server only if it is not empty
+        if file:
+            data, size = self._read_data(file)
+            content_type=self._get_content_type(file, data, id, content_type)
+            if not self.source_id:
+                self.source_id = getattr(file, 'filename')
+            self.update_data(data, content_type, size)
+
+    def getSourceId(self):
+        fname = getattr(self, 'filename', '')
+        return "%s_%s" % (self.id(), fname)
+
+    def update_source(self, data, content_type):
+        aws_utility = getUtility(IAWSUtility)
+        as3client = aws_utility.getFileClient()
+        if self.uploaded_source_id:
+            # remove old object
+            as3client.delete(aws_utility.getBucketName(),
+                             self.uploaded_source_id)
+
+        as3client.put(aws_utility.getBucketName(),
+                      self.getSourceId(), content_type, data)
+        as3client.set_permission(aws_utility.getBucketName(),
+                                 self.getSourceId(), 'public-read')
+        self.uploaded_source_id = self.getSourceId()
 
     def update_data(self, data, content_type=None, size=None):
         if isinstance(data, unicode):
@@ -56,11 +89,8 @@ class AWSFile(File):
         self.size=size
 
         # write file to amazon
-        aws_utility = getUtility(IAWSUtility)
-        as3client = aws_utility.getFileClient()
         if isinstance(data, str):
-            as3client.put(aws_utility.getBucketName(), self.id(),
-                          content_type, data)
+            self.update_source(data, content_type)
             return
 
         #TODO: we need to find a way to upload file partially
@@ -70,9 +100,25 @@ class AWSFile(File):
             parts.append(data.data)
             data=data.next
         if parts:
-            as3client.put(aws_utility.getBucketName(), self.id(),
-                          content_type, ''.join(parts))
+            self.update_source(''.join(parts), content_type)
 
         self.ZCacheable_invalidate()
         self.ZCacheable_set(None)
         self.http__refreshEtag()
+
+    security.declareProtected(View, 'index_html')
+    def index_html(self, REQUEST, RESPONSE):
+        """
+        The default view of the contents of a File or Image.
+
+        Returns the contents of the file or image.  Also, sets the
+        Content-Type HTTP header to the objects content type.
+        """
+
+        return RESPONSE.redirect(self.absolute_url())
+
+    def absolute_url(self):
+        aws_utility = getUtility(IAWSUtility)
+        as3client = aws_utility.getFileClient()
+        bucket_name = aws_utility.getBucketName()
+        return as3client.absolute_url(bucket_name, self.getSourceId())

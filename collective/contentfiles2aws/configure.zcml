@@ -7,5 +7,6 @@
 
   <include file="utility.zcml"/>
   <include file="profiles.zcml"/>
+  <include file="skins.zcml"/>
 
 </configure>

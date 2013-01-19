@@ -77,6 +77,30 @@ class AWSFileClient(object):
             logger.error('%s, %s, %s' % (e.status, e.reason, e.message))
             raise
 
+    def set_permission(self, bucket_name, filename, acl_string):
+        conn = self.connection
+        try:
+            bucket = conn.get_bucket(bucket_name)
+        except S3ResponseError,e:
+            #XXX: think about what we should do in this case.
+            logger.error('%s, %s, %s' % (e.status, e.reason, e.message))
+            raise
+
+        try:
+            key = bucket.get_key(filename)
+            if not key:
+                return
+            key.set_acl(acl_string)
+        except S3ResponseError:
+            #XXX: think about what we should do in this case.
+            logger.error('%s, %s, %s' % (e.status, e.reason, e.message))
+            raise
+
+    def absolute_url(self, bucket_name, filename):
+        return "http://%s.%s/%s" % (bucket_name,
+                                    self.connection.server,
+                                    filename)
+
     def delete(self, bucket_name, filename):
         """ Removes file form amazon storage using provided filename.
 

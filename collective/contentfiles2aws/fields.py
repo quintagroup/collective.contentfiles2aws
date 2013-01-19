@@ -1,10 +1,18 @@
+from types import FileType
+
 from OFS.Image import File
 from Acquisition import aq_base
 from AccessControl import ClassSecurityInfo
+from ZPublisher.HTTPRequest import FileUpload
+
+from zope.contenttype import guess_content_type
 
 from Products.Archetypes.utils import shasattr
 from Products.Archetypes.Field import FileField
+from Products.CMFCore.utils import getToolByName
 from Products.Archetypes.Registry import registerField
+from Products.Archetypes.interfaces.base import IBaseUnit
+from Products.Archetypes.exceptions import FileFieldException
 
 from collective.contentfiles2aws.awsfile import AWSFile
 from collective.contentfiles2aws.widgets import AWSFileWidget
@@ -63,8 +71,10 @@ class AWSFileField(FileField):
 
     def _make_file(self, id, title='', file='', instance=None):
         """File content factory"""
-        fid = self.cookFileId(instance)
-        return self.content_class(fid, title, file)
+        source_id = ''
+        if file:
+            source_id = self.cookFileId(instance)
+        return self.content_class(id, source_id, title, file)
 
     security.declarePrivate('set')
     def set(self, instance, value, **kwargs):
@@ -127,27 +137,88 @@ class AWSFileField(FileField):
 
     def cookFileId(self, instance):
         """ Prepare unique file id for file object. """
-        return "%s%s" %  (instance.UID(), self.getName())
+        return "%s_%s" %  (instance.UID(), self.getName())
 
+    def url(self, instance):
+        file_object = self.get(instance, raw=True, unwrapped=True)
+        return file_object.absolute_url()
 
-    def _wrapValue(self, instance, value, **kwargs):
-        """Wraps the value in the content class if it's not wrapped
-        """
-        if isinstance(value, self.content_class):
-            return value
-        mimetype = kwargs.get('mimetype', self.default_content_type)
-        filename = kwargs.get('filename', '')
-        fid = self.cookFileId(instance)
-        obj = self._make_file(fid, title='', file=value, instance=instance)
-        setattr(obj, 'filename', filename)
-        setattr(obj, 'content_type', mimetype)
-        try:
-            delattr(obj, 'title')
-        except (KeyError, AttributeError):
+    def _process_input(self, value, file=None, default=None, mimetype=None,
+                       instance=None, filename='', **kwargs):
+        if file is None:
+            file = self._make_file(self.cookFileId(instance), title='',
+                                   file='', instance=instance)
+        if IBaseUnit.isImplementedBy(value):
+            mimetype = value.getContentType() or mimetype
+            filename = value.getFilename() or filename
+            value = value.getRaw()
+        elif isinstance(value, self.content_class):
+            filename = getattr(value, 'filename', value.getId())
+            mimetype = getattr(value, 'content_type', mimetype)
+            return value, mimetype, filename
+        elif isinstance(value, File):
+            # In case someone changes the 'content_class'
+            filename = getattr(value, 'filename', value.getId())
+            mimetype = getattr(value, 'content_type', mimetype)
+            value = value.data
+        elif isinstance(value, FileUpload) or shasattr(value, 'filename'):
+            filename = value.filename
+        elif isinstance(value, FileType) or shasattr(value, 'name'):
+            # In this case, give preference to a filename that has
+            # been detected before. Usually happens when coming from PUT().
+            if not filename:
+                filename = value.name
+                # Should we really special case here?
+                for v in (filename, repr(value)):
+                    # Windows unnamed temporary file has '<fdopen>' in
+                    # repr() and full path in 'file.name'
+                    if '<fdopen>' in v:
+                        filename = ''
+        elif isinstance(value, basestring):
+            # Let it go, mimetypes_registry will be used below if available
             pass
+        elif (isinstance(value, Pdata) or (shasattr(value, 'read') and
+                                           shasattr(value, 'seek'))):
+            # Can't get filename from those.
+            pass
+        elif value is None:
+            # Special case for setDefault
+            value = ''
+        else:
+            klass = getattr(value, '__class__', None)
+            raise FileFieldException('Value is not File or String (%s - %s)' %
+                                     (type(value), klass))
+        filename = filename[max(filename.rfind('/'),
+                                filename.rfind('\\'),
+                                filename.rfind(':'),
+                                )+1:]
 
-        return obj
-
+        setattr(file, 'filename', filename)
+        initializing = kwargs.get('_initializing_', False)
+        if not initializing:
+            file.manage_upload(value)
+        if mimetype is None or mimetype == 'text/x-unknown-content-type':
+            body = file.data
+            if not isinstance(body, basestring):
+                body = body.data
+            mtr = getToolByName(instance, 'mimetypes_registry', None)
+            if mtr is not None:
+                kw = {'mimetype':None,
+                      'filename':filename}
+                # this may split the encoded file inside a multibyte character
+                try:
+                    d, f, mimetype = mtr(body[:8096], **kw)
+                except UnicodeDecodeError:
+                    d, f, mimetype = mtr(len(body) < 8096 and body or '', **kw)
+            else:
+                mimetype = getattr(file, 'content_type', None)
+                if mimetype is None:
+                    mimetype, enc = guess_content_type(filename, body, mimetype)
+        # mimetype, if coming from request can be like:
+        # text/plain; charset='utf-8'
+        mimetype = str(mimetype).split(';')[0].strip()
+        setattr(file, 'content_type', mimetype)
+        return file, mimetype, filename
 
 registerField(AWSFileField,
               title='AWS File',
