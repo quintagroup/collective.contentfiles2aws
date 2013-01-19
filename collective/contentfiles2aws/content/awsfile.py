@@ -1,3 +1,5 @@
+from zope.interface import implements
+
 from Products.Archetypes.atapi import Schema
 from Products.Archetypes.atapi import PrimaryFieldMarshaller
 from Products.Archetypes.atapi import AnnotationStorage
@@ -13,6 +15,7 @@ from Products.validation import V_REQUIRED
 from collective.contentfiles2aws.config import PROJECTNAME
 from collective.contentfiles2aws.fields import AWSFileField
 from collective.contentfiles2aws.widgets import AWSFileWidget
+from collective.contentfiles2aws.content.interfaces import IAWSFile
 
 
 __docformat__ = 'restructuredtext'
@@ -44,5 +47,7 @@ class AWSFile(ATFile):
     schema         =  AWSFileSchema
     portal_type    = 'AWSFile'
     archetype_name = 'AWSFile'
+
+    implements(IAWSFile)
 
 registerATCT(AWSFile, PROJECTNAME)

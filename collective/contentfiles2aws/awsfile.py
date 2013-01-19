@@ -70,13 +70,9 @@ class AWSFile(File):
         as3client = aws_utility.getFileClient()
         if self.uploaded_source_id:
             # remove old object
-            as3client.delete(aws_utility.getBucketName(),
-                             self.uploaded_source_id)
+            as3client.delete(self.uploaded_source_id)
 
-        as3client.put(aws_utility.getBucketName(),
-                      self.getSourceId(), content_type, data)
-        as3client.set_permission(aws_utility.getBucketName(),
-                                 self.getSourceId(), 'public-read')
+        as3client.put(self.getSourceId(), data, mimetype=content_type)
         self.uploaded_source_id = self.getSourceId()
 
     def update_data(self, data, content_type=None, size=None):
@@ -120,5 +116,4 @@ class AWSFile(File):
     def absolute_url(self):
         aws_utility = getUtility(IAWSUtility)
         as3client = aws_utility.getFileClient()
-        bucket_name = aws_utility.getBucketName()
-        return as3client.absolute_url(bucket_name, self.getSourceId())
+        return as3client.source_url(self.getSourceId())

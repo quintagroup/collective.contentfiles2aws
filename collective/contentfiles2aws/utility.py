@@ -39,7 +39,8 @@ class AWSUtility(object):
         """ Provide a aws file client. """
         config = self.getAWSConfiguration()
         client = AWSFileClient(config['aws_key_id'],
-                               config['aws_seecret_key'],)
+                               config['aws_seecret_key'],
+                               config['aws_bucket_name'])
         return client
 
 aws_utility = AWSUtility()

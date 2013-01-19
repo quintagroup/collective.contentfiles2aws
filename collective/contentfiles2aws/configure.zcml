@@ -8,5 +8,6 @@
   <include file="utility.zcml"/>
   <include file="profiles.zcml"/>
   <include file="skins.zcml"/>
+  <include file="subscribers.zcml"/>
 
 </configure>
