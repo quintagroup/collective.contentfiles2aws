@@ -6,4 +6,12 @@
   <property name="AWS_BUCKET_NAME" type="string">contentfiles.choosehelp.com</property>
   <property name="AWS_FILENAME_PREFIX" type="string">files</property>
  </object>
+ <object name="site_properties" meta_type="Plone Property Sheet">
+  <property name="typesUseViewActionInListings" type="lines">
+   <element value="Image"/>
+   <element value="File"/>
+   <element value="AWSFile"/>
+   <element value="AWSImage"/>
+  </property>
+ </object>
 </object>

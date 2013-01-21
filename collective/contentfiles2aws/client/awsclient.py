@@ -114,7 +114,9 @@ class AWSFileClient(object):
             bucket.delete_key(filename)
         except S3ResponseError, e:
             logger.exception('%s, %s, %s' % (e.status, e.reason, e.message))
-            raise AWSFileClientRemoveError(e.message)
+            raise AWSFileClientRemoveError(u"Couldn't delete %s file. %s" % \
+                                           (filename.decode('utf-8'),
+                                            e.message.decode('utf-8')))
 
     def source_url(self, filename, **kw):
         bucket_name = self._get_bucket_name(**kw)

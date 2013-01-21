@@ -117,3 +117,9 @@ class AWSFile(File):
         aws_utility = getUtility(IAWSUtility)
         as3client = aws_utility.getFileClient()
         return as3client.source_url(self.getSourceId())
+
+    #def __del__(self):
+    #    aws_utility = getUtility(IAWSUtility)
+    #    as3client = aws_utility.getFileClient()
+    #    #if self.uploaded_source_id:
+    #    #    as3client.delete(self.uploaded_source_id)

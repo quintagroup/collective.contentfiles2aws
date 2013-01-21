@@ -1,6 +1,8 @@
 from ZClasses import createZClassForBase
 from AccessControl.Permissions import add_documents_images_and_files
 
+from zope.i18nmessageid import MessageFactory
+
 from Products.CMFCore import utils
 from Products.Archetypes import atapi
 
@@ -8,6 +10,7 @@ from collective.contentfiles2aws.content import AWSFile
 from collective.contentfiles2aws import awsfile
 from collective.contentfiles2aws import config
 
+MFactory = MessageFactory(config.PROJECTNAME)
 
 createZClassForBase(awsfile.AWSFile, globals(), 'ZFile', 'AWSFile')
 

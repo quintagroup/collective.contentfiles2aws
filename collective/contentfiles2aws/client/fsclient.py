@@ -1,14 +1,22 @@
-class FileClientRetrieveError(Exception):
-    """ Base Retrieve Error Exception """
+class FileClientError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return repr(self.message)
+
+class FileClientRetrieveError(FileClientError):
+    """ Base Retrieve Error Exception"""
     pass
 
 
-class FileClientStoreError(Exception):
+class FileClientStoreError(FileClientError):
     """ Base Store Error Exception """
     pass
 
 
-class FileClientRemoveError(Exception):
+class FileClientRemoveError(FileClientError):
     """ Base Remove Error Exception """
     pass
 
