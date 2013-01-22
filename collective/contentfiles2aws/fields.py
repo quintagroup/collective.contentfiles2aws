@@ -371,6 +371,7 @@ class AWSImageField(AWSFileField):
     security  = ClassSecurityInfo()
 
     default_view = "view"
+    filename = ''
 
     def cookImageId(self, instance, filename=''):
         """ Prepare unique file id for file object. """
@@ -412,6 +413,8 @@ class AWSImageField(AWSFileField):
         default = self.getDefault(instance)
         value, mimetype, filename = self._process_input(value, default=default,
                                                         instance=instance, **kwargs)
+        if filename:
+            self.filename = filename
         # value is an OFS.Image.File based instance
         # don't store empty images
         get_size = getattr(value, 'get_size', None)
@@ -556,8 +559,7 @@ class AWSImageField(AWSFileField):
             if size == (0,0):
                 continue
             w, h = size
-            scale_name = '%s_%s%s' % (fname, n, ext)
-            id = self.cookImageId(instance, filename=scale_name)
+            id = self.getScaleName(instance, scale=n)
             __traceback_info__ = (self, instance, id, w, h)
             try:
                 imgdata, format = self.scale(data, w, h)
@@ -644,7 +646,7 @@ class AWSImageField(AWSFileField):
         else:
             assert(scale in self.getAvailableSizes(instance).keys(),
                    'Unknown scale %s for %s' % (scale, self.getName()))
-            id = self.getScaleName(scale=scale)
+            id = self.getScaleName(instance, scale=scale)
             try:
                 image = self.getStorage(instance).get(id, instance, **kwargs)
             except AttributeError:
@@ -656,11 +658,13 @@ class AWSImageField(AWSFileField):
                 return image
 
     security.declareProtected(permissions.View, 'getScaleName')
-    def getScaleName(self, scale=None):
+    def getScaleName(self, instance, scale=None):
         """Get the full name of the attribute for the scale
         """
         if scale:
-            return self.getName() + "_" + scale
+            fname, ext = os.path.splitext(self.filename)
+            scale_name = '%s_%s%s' % (fname, scale, ext)
+            return self.cookImageId(instance, filename=scale_name)
         else:
             return ''
 
@@ -693,20 +697,16 @@ class AWSImageField(AWSFileField):
         image = self.getScale(instance, scale=scale)
         if image:
             img_width, img_height = self.getSize(instance, scale=scale)
+            url = image.absolute_url()
         else:
             img_height=0
             img_width=0
+            url = instance.absolute_url()
 
         if height is None:
             height=img_height
         if width is None:
             width=img_width
-
-        url = instance.absolute_url()
-        if scale:
-            url+= '/' + self.getScaleName(scale)
-        else:
-            url+= '/' + self.getName()
 
         values = {'src' : url,
                   'alt' : escape(alt and alt or instance.Title(), 1),
