@@ -7,7 +7,7 @@ class IAWSFile(Interface):
     pass
 
 
-class IAWSImage(IAWSFile):
+class IAWSImage(Interface):
     """
     """
     pass

@@ -7,10 +7,10 @@
       handler="collective.contentfiles2aws.handlers.before_file_remove"
       />
 
-  <!--subscriber
+  <subscriber
       for="collective.contentfiles2aws.content.interfaces.IAWSImage
            OFS.interfaces.IObjectWillBeRemovedEvent"
-      handler="collective.contentfiles2aws.handlers.before_file_remove"
-      /-->
+      handler="collective.contentfiles2aws.handlers.before_image_remove"
+      />
 
 </configure>

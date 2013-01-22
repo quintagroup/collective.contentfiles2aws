@@ -7,7 +7,9 @@ from Products.CMFCore import utils
 from Products.Archetypes import atapi
 
 from collective.contentfiles2aws.content import AWSFile
+from collective.contentfiles2aws.content import AWSImage
 from collective.contentfiles2aws import awsfile
+from collective.contentfiles2aws import awsimage
 from collective.contentfiles2aws import config
 
 MFactory = MessageFactory(config.PROJECTNAME)
@@ -23,6 +25,15 @@ def initialize(context):
                        awsfile.manage_addFile),
         icon='images/File_icon.gif',
         legacy=(awsfile.manage_addFile,),
+        )
+
+    context.registerClass(
+        awsimage.AWSImage,
+        permission=add_documents_images_and_files,
+        constructors=(('imageAdd', awsimage.manage_addImageForm),
+                       awsimage.manage_addImage),
+        icon='images/Image_icon.gif',
+        legacy=(awsimage.manage_addImage,),
         )
 
     content_types, constructors, ftis = atapi.process_types(

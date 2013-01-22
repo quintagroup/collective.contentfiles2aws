@@ -57,13 +57,13 @@ class AWSFile(File):
         if file:
             data, size = self._read_data(file)
             content_type=self._get_content_type(file, data, id, content_type)
-            if not self.source_id:
-                self.source_id = getattr(file, 'filename')
             self.update_data(data, content_type, size)
 
     def getSourceId(self):
         fname = getattr(self, 'filename', '')
-        return "%s_%s" % (self.id(), fname)
+        if fname:
+            return "%s_%s" % (self.id(), fname)
+        return self.id()
 
     def update_source(self, data, content_type):
         aws_utility = getUtility(IAWSUtility)
