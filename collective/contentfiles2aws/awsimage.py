@@ -53,7 +53,6 @@ def manage_addImage(self, id, file, title='', precondition='', content_type='',
     return id
 
 
-
 class AWSImage(AWSFile):
     """AWSImage objects can be GIF, PNG or JPEG and have the same methods
     as AWSFile objects.  Images also have a string representation that
@@ -64,6 +63,8 @@ class AWSImage(AWSFile):
 
     security = ClassSecurityInfo()
     security.declareObjectProtected(View)
+
+    filename = u''
 
     alt=''
     height=''
@@ -110,9 +111,6 @@ class AWSImage(AWSFile):
     security.declareProtected(view_management_screens, 'manage_main')
     manage=manage_main=manage_editForm
     manage_uploadForm=manage_editForm
-
-    def getSourceId(self):
-        return self.id()
 
     security.declarePrivate('update_data')
     def update_data(self, data, content_type=None, size=None):

@@ -2,7 +2,6 @@ from zope.interface import implements
 
 from Products.Archetypes.atapi import Schema
 from Products.Archetypes.atapi import PrimaryFieldMarshaller
-from Products.Archetypes.atapi import AnnotationStorage
 
 from Products.ATContentTypes.configuration import zconf
 from Products.ATContentTypes.content.base import registerATCT
@@ -31,7 +30,6 @@ AWSImageSchema = ATContentTypeSchema.copy() + Schema((
                   required=True,
                   primary=True,
                   languageIndependent=True,
-                  storage = AnnotationStorage(migrate=True),
                   swallowResizeExceptions = zconf.swallowImageResizeExceptions.enable,
                   pil_quality = zconf.pil_config.quality,
                   pil_resize_algo = zconf.pil_config.resize_algo,
@@ -70,6 +68,5 @@ class AWSImage(ATImage):
     archetype_name = 'AWSImage'
 
     implements(IAWSImage)
-
 
 registerATCT(AWSImage, PROJECTNAME)

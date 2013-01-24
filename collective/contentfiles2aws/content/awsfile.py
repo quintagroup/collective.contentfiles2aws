@@ -2,7 +2,6 @@ from zope.interface import implements
 
 from Products.Archetypes.atapi import Schema
 from Products.Archetypes.atapi import PrimaryFieldMarshaller
-from Products.Archetypes.atapi import AnnotationStorage
 
 from Products.ATContentTypes.content.base import registerATCT
 from Products.ATContentTypes.content.schemata import ATContentTypeSchema
@@ -27,7 +26,6 @@ AWSFileSchema = ATContentTypeSchema.copy() + Schema((
                  primary=True,
                  searchable=False,
                  languageIndependent=True,
-                 storage = AnnotationStorage(migrate=True),
                  validators = (('isNonEmptyFile', V_REQUIRED),
                                 ('checkFileMaxSize', V_REQUIRED)),
                  widget = AWSFileWidget(
