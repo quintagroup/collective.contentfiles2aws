@@ -1,3 +1,6 @@
+from time import time
+from md5 import md5
+from random import random
 from os.path import splitext
 from zope.component import getUtility
 from Acquisition import aq_parent
@@ -59,25 +62,39 @@ class AWSFile(File):
         self.filename = filename
         self.content_type = content_type
         self.precondition=precondition
+        self.source_id = None
         self.uploaded_source_id = None
+
 
         if file:
             data, size = self._read_data(file)
             content_type=self._get_content_type(file, data, id, content_type)
             self.update_data(data, content_type, size)
 
+    def make_prefix(*args):
+        data =  str(time() * 1000L) + str(random()*100000000000000000L)
+        return md5(data).hexdigest()[-7:]
+
     def getNormalizedName(self):
         if self.filename:
             normalizer = getUtility(IIDNormalizer)
             return ".".join([normalizer.normalize(safe_unicode(n))
                              for n in splitext(self.filename)])
-    def getSourceId(self):
+    def getSourceId(self, fresh=False):
+        if not fresh and self.source_id:
+            return self.source_id
+
+        sid = ''
         parent = aq_parent(self)
-        if self.filename:
-            return "%s_%s_%s" % (parent.UID(),
-                                 self.id(),
-                                 self.getNormalizedName())
-        return self.id()
+        if parent:
+            sid = sid + parent.UID()
+        sid = sid + self.make_prefix()
+        sid = "%s_%s" % (sid, self.id())
+        fname = self.getNormalizedName()
+        if fname:
+            sid = '%s_%s' % (sid, fname)
+        self.source_id = sid
+        return self.source_id
 
     def update_source(self, data, content_type):
         aws_utility = getUtility(IAWSUtility)
@@ -86,8 +103,9 @@ class AWSFile(File):
             # remove old object
             as3client.delete(self.uploaded_source_id)
 
-        as3client.put(self.getSourceId(), data, mimetype=content_type)
-        self.uploaded_source_id = self.getSourceId()
+        source_id = self.getSourceId(fresh=True)
+        as3client.put(source_id, data, mimetype=content_type)
+        self.uploaded_source_id = source_id
 
     def update_data(self, data, content_type=None, size=None):
         if isinstance(data, unicode):
