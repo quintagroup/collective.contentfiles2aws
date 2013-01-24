@@ -32,6 +32,7 @@ from collective.contentfiles2aws.widgets import AWSFileWidget
 from collective.contentfiles2aws.widgets import AWSImageWidget
 
 #from collective.contentfiles2aws import MFactory as _
+from collective.contentfiles2aws.config import AWSCONF_SHEET
 from collective.contentfiles2aws.client.fsclient import FileClientStoreError
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
 
@@ -63,7 +64,15 @@ class AWSFileField(FileField):
 
     security  = ClassSecurityInfo()
 
+    def use_aws(self, instance):
+        pp = getToolByName(instance, 'portal_properties')
+        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
+        return awsconf_sheet.getProperty('USE_AWS')
+
     def migrate(self, instance):
+        if not self.use_aws(instance):
+            return
+
         obj = self.get(instance)
         if hasattr(obj, 'meta_type') and \
             obj.meta_type == self.fallback_content_class.meta_type:
@@ -139,12 +148,16 @@ class AWSFileField(FileField):
                    content_type='', instance=None, factory=None):
         """File content factory"""
 
-        if file:
-            id = self.cookFileId(instance)
+
         if not factory:
             factory = self.content_class
 
+        if not self.use_aws(instance):
+            factory = self.fallback_content_class
+
         if factory == self.fallback_content_class:
+            if not file:
+                file = StringIO()
             file_obj =  factory(id, title, file, content_type=content_type)
             setattr(file_obj, 'filename', filename)
         else:
@@ -430,7 +443,7 @@ class AWSImageField(AWSFileField):
         filename = getattr(image, 'filename', '')
         content_type = getattr(image, 'content_type','')
         try:
-            obj = self._make_image(id, title='', file='',
+            obj = self._make_file(id, title='', file='',
                                    filename=filename,
                                    content_type=content_type,
                                    instance=instance)
@@ -452,7 +465,7 @@ class AWSImageField(AWSFileField):
             return value
         mimetype = kwargs.get('mimetype', self.default_content_type)
         filename = kwargs.get('filename', '')
-        obj = self._make_image(self.cookFileId(instance),
+        obj = self._make_file(self.cookFileId(instance),
                               title='', file=value, instance=instance)
         setattr(obj, 'filename', filename)
         setattr(obj, 'content_type', mimetype)
@@ -465,7 +478,6 @@ class AWSImageField(AWSFileField):
 
     security.declarePrivate('set')
     def set(self, instance, value, **kwargs):
-        # Do we have to delete the image?
         if value=="DELETE_IMAGE":
             self.removeScales(instance, **kwargs)
             # unset main field too
@@ -502,6 +514,7 @@ class AWSImageField(AWSFileField):
                                                         **kwargs)
         if filename:
             self.filename = filename
+
         # value is an OFS.Image.File based instance
         # don't store empty images
         get_size = getattr(value, 'get_size', None)
@@ -669,7 +682,7 @@ class AWSImageField(AWSFileField):
 
             if image:
                 if migrate and isinstance(image, self.fallback_content_class):
-                    image = self._make_image(id, title='', file='',
+                    image = self._make_file(id, title='', file='',
                                              instance=instance,
                                              filename=filename,
                                              content_type=mimetype)
@@ -683,14 +696,14 @@ class AWSImageField(AWSFileField):
                         image.manage_upload(imgdata)
                         continue
                     except (FileClientRemoveError, FileClientStoreError), e:
-                        image = self._make_image(id, title='', file=imgdata,
+                        image = self._make_file(id, title='', file=imgdata,
                                                instance=instance,
                                                filename=filename,
                                                content_type=mimetype,
                                                factory=self.fallback_content_class)
             else:
                 try:
-                    image = self._make_image(id, title=self.getName(),
+                    image = self._make_file(id, title=self.getName(),
                                             file='', filename=filename,
                                             content_type=mimetype,
                                             instance=instance)
@@ -706,7 +719,7 @@ class AWSImageField(AWSFileField):
                                     safe_unicode(e.message)), type='error')
                     # creating default OFS.Image.Image object
                     # to prevent data loss
-                    image = self._make_image(id, title='', file=imgdata,
+                    image = self._make_file(id, title='', file=imgdata,
                                             instance=instance,
                                             filename=filename,
                                             content_type=mimetype,
@@ -719,20 +732,20 @@ class AWSImageField(AWSFileField):
             self.getStorage(instance).set(id, instance, image,
                                           mimetype=mimetype, filename=filename)
 
-    def _make_image(self, id, title='', file='', filename=u'',
-                    content_type='', instance=None, factory=None):
-        """Image content factory"""
+    #def _make_image(self, id, title='', file='', filename=u'',
+    #                content_type='', instance=None, factory=None):
+    #    """Image content factory"""
 
-        if not factory:
-            factory = self.content_class
+    #    if not factory:
+    #        factory = self.content_class
 
-        if factory == self.fallback_content_class:
-            image = factory(id, title, file, content_type=content_type)
-            setattr(image, 'filename', filename)
-        else:
-            image = factory(id, title, file, filename=filename,
-                            content_type=content_type)
-        return image
+    #    if factory == self.fallback_content_class:
+    #        image = factory(id, title, file, content_type=content_type)
+    #        setattr(image, 'filename', filename)
+    #    else:
+    #        image = factory(id, title, file, filename=filename,
+    #                        content_type=content_type)
+    #    return image
 
     security.declarePrivate('scale')
     def scale(self, data, w, h, default_format = 'PNG'):
@@ -866,7 +879,7 @@ class AWSImageField(AWSFileField):
                        instance=None, filename='', **kwargs):
         if file is None:
             filename = getattr(value, 'filename', '')
-            file = self._make_image(self.cookFileId(instance),
+            file = self._make_file(self.cookFileId(instance),
                                     title='', file='', instance=instance)
         if IBaseUnit.isImplementedBy(value):
             mimetype = value.getContentType() or mimetype
@@ -925,7 +938,7 @@ class AWSImageField(AWSFileField):
                                 (safe_unicode(filename),
                                  safe_unicode(e.message)), type='error')
                 #creating default OFS.Image.File object to prevent data loss
-                file = self._make_image(self.cookFileId(instance),
+                file = self._make_file(self.cookFileId(instance),
                                        title='', file=value, instance=instance,
                                        filename=filename,
                                        content_type=mimetype,
