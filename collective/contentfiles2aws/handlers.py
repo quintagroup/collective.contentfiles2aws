@@ -28,10 +28,7 @@ def before_image_remove(obj, event):
     if hasattr(image_obj, 'uploaded_source_id') and image_obj.uploaded_source_id:
         try:
             as3client.delete(image_obj.uploaded_source_id)
-            field = obj.schema['image']
-            for scale in field.getAvailableSizes(obj):
-                id = field.getScaleName(obj, scale=scale)
-                as3client.delete(id)
+            obj.schema['image'].removeScales(obj)
         except FileClientRemoveError, e:
             IStatusMessage(obj.REQUEST).addStatusMessage(_(e.message),
                                                          type='error')
