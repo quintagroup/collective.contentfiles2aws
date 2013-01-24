@@ -1,9 +1,14 @@
+from os.path import splitext
 from zope.component import getUtility
+from Acquisition import aq_parent
 
 from Globals import DTMLFile
 from OFS.Image import File, cookId
 from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view as View
+
+from Products.CMFPlone.utils import safe_unicode
+from plone.i18n.normalizer.interfaces import IIDNormalizer
 
 from collective.contentfiles2aws.interfaces import IAWSUtility
 
@@ -42,27 +47,36 @@ class AWSFile(File):
 
     meta_type = 'AWS File'
     data = ''
+    filename = u''
 
     security = ClassSecurityInfo()
 
-    def __init__(self, id, title, file, content_type='', precondition=''):
+    def __init__(self, id, title, file, filename=u'', content_type='',
+                 precondition=''):
         self.__name__=id
         self.title=title
-        self.precondition=precondition
         self.size = 0
+        self.filename = filename
         self.content_type = content_type
+        self.precondition=precondition
         self.uploaded_source_id = None
 
-        #upload file to remote server only if it is not empty
         if file:
             data, size = self._read_data(file)
             content_type=self._get_content_type(file, data, id, content_type)
             self.update_data(data, content_type, size)
 
+    def getNormalizedName(self):
+        if self.filename:
+            normalizer = getUtility(IIDNormalizer)
+            return ".".join([normalizer.normalize(safe_unicode(n))
+                             for n in splitext(self.filename)])
     def getSourceId(self):
-        fname = getattr(self, 'filename', '')
-        if fname:
-            return "%s_%s" % (self.id(), fname)
+        parent = aq_parent(self)
+        if self.filename:
+            return "%s_%s_%s" % (parent.UID(),
+                                 self.id(),
+                                 self.getNormalizedName())
         return self.id()
 
     def update_source(self, data, content_type):
@@ -118,8 +132,8 @@ class AWSFile(File):
         as3client = aws_utility.getFileClient()
         return as3client.source_url(self.getSourceId())
 
-    #def __del__(self):
-    #    aws_utility = getUtility(IAWSUtility)
-    #    as3client = aws_utility.getFileClient()
-    #    #if self.uploaded_source_id:
-    #    #    as3client.delete(self.uploaded_source_id)
+    def remove_source(self):
+        aws_utility = getUtility(IAWSUtility)
+        as3client = aws_utility.getFileClient()
+        if self.uploaded_source_id:
+            as3client.delete(self.uploaded_source_id)
