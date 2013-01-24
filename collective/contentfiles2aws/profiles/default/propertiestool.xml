@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <object name="portal_properties" meta_type="Plone Properties Tool">
  <object name="contentfiles2aws" meta_type="Plone Property Sheet">
-  <property name="USE_AWS" type="boolean">True</property>
-  <property name="AWS_KEY_ID" type="string">AKIAINLOZRM6F6HR7ARA</property>
-  <property name="AWS_SEECRET_KEY" type="string">sRRkiyCPoKUOEcOMtl3LTsIxq5teKTxK3sFzzudE</property>
-  <property name="AWS_BUCKET_NAME" type="string">contentfiles.choosehelp.com</property>
-  <property name="AWS_FILENAME_PREFIX" type="string">files</property>
+  <property name="USE_AWS" type="boolean">False</property>
+  <property name="AWS_KEY_ID" type="string"></property>
+  <property name="AWS_SEECRET_KEY" type="string"></property>
+  <property name="AWS_BUCKET_NAME" type="string"></property>
+  <property name="AWS_FILENAME_PREFIX" type="string"></property>
  </object>
  <object name="site_properties" meta_type="Plone Property Sheet">
   <property name="typesUseViewActionInListings" type="lines">
