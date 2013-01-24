@@ -31,7 +31,6 @@ from collective.contentfiles2aws.awsimage import AWSImage
 from collective.contentfiles2aws.widgets import AWSFileWidget
 from collective.contentfiles2aws.widgets import AWSImageWidget
 
-#from collective.contentfiles2aws import MFactory as _
 from collective.contentfiles2aws.config import AWSCONF_SHEET
 from collective.contentfiles2aws.client.fsclient import FileClientStoreError
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
@@ -81,7 +80,7 @@ class AWSFileField(FileField):
             return False
 
     def _do_migrate(self, instance):
-        id = self.cookFileId(instance)
+        id = self.getName()
         file_obj = self.getStorage(instance).get(id, instance,
                                               raw=True, unwrapped=True)
         if file_obj.meta_type != self.fallback_content_class.meta_type:
@@ -103,25 +102,25 @@ class AWSFileField(FileField):
                                           content_type=content_type)
 
     def unset(self, instance, **kwargs):
-        __traceback_info__ = (self.cookFileId(instance), instance, kwargs)
-        self.getStorage(instance).unset(self.cookFileId(instance), instance, **kwargs)
+        __traceback_info__ = (self.getName(), instance, kwargs)
+        self.getStorage(instance).unset(self.getName(), instance, **kwargs)
 
     security.declarePrivate('_set')
     def _set(self, instance, value, **kwargs):
         kwargs['field'] = self
         # Remove acquisition wrappers
         value = aq_base(value)
-        __traceback_info__ = (self.cookFileId(instance), instance, value, kwargs)
-        self.getStorage(instance).set(self.cookFileId(instance), instance,
+        __traceback_info__ = (self.getName(), instance, value, kwargs)
+        self.getStorage(instance).set(self.getName(), instance,
                                         value, **kwargs)
 
     def _get(self, instance, **kwargs):
         #TODO: this method is from ObjectField class
         #      does it really need to be customized?
-        __traceback_info__ = (self.cookFileId(instance), instance, kwargs)
+        __traceback_info__ = (self.getName(), instance, kwargs)
         try:
             kwargs['field'] = self
-            return self.getStorage(instance).get(self.cookFileId(instance), instance, **kwargs)
+            return self.getStorage(instance).get(self.getName(), instance, **kwargs)
         except AttributeError:
             # happens if new Atts are added and not yet stored in the instance
             # @@ and at every other possible occurence of an AttributeError?!!
@@ -230,11 +229,6 @@ class AWSFileField(FileField):
         obj = self._wrapValue(instance, value, **kwargs)
         self._set(instance, obj, **kwargs)
 
-    def cookFileId(self, instance):
-        """ Prepare unique file id for file object. """
-        return self.getName()
-        return "%s_%s" %  (instance.UID(), self.getName())
-
     def url(self, instance):
         fobj = self.get(instance, raw=True, unwrapped=True)
         if hasattr(fobj, 'meta_type') and \
@@ -246,7 +240,7 @@ class AWSFileField(FileField):
     def _process_input(self, value, file=None, default=None, mimetype=None,
                        instance=None, filename='', **kwargs):
         if file is None:
-            file = self._make_file(self.cookFileId(instance), title='',
+            file = self._make_file(self.getName(), title='',
                                    file='', instance=instance)
         if IBaseUnit.isImplementedBy(value):
             mimetype = value.getContentType() or mimetype
@@ -305,7 +299,7 @@ class AWSFileField(FileField):
                                 (safe_unicode(filename),
                                  safe_unicode(e.message)), type='error')
                 #creating default OFS.Image.File object to prevent data loss
-                file = self._make_file(self.cookFileId(instance),
+                file = self._make_file(self.getName(),
                                        title='', file='', filename=filename,
                                        instance=instance,
                                        factory=self.fallback_content_class)
@@ -340,77 +334,6 @@ registerField(AWSFileField,
 
 
 class AWSImageField(AWSFileField):
-    """ implements an image attribute. it stores
-        it's data in an image sub-object
-
-        sizes is an dictionary containing the sizes to
-        scale the image to. PIL is required for that.
-
-        Format:
-        sizes={'mini': (50,50),
-               'normal' : (100,100), ... }
-        syntax: {'name': (width,height), ... }
-
-        the scaled versions can then be accessed as
-        object/<imagename>_<scalename>
-
-        e.g. object/image_mini
-
-        where <imagename> is the fieldname and <scalename>
-        is the name from the dictionary
-
-        original_size -- this parameter gives the size in (w,h)
-        to which the original image will be scaled. If it's None,
-        then no scaling will take place.
-        This is important if you don't want to store megabytes of
-        imagedata if you only need a max. of 100x100 ;-)
-
-        max_size -- similar to max_size but if it's given then the image
-                    is checked to be no bigger than any of the given values
-                    of width or height.
-
-        example:
-
-        ImageField('image',
-            original_size=(600,600),
-            sizes={ 'mini' : (80,80),
-                    'normal' : (200,200),
-                    'big' : (300,300),
-                    'maxi' : (500,500)})
-
-        will create an attribute called "image"
-        with the sizes mini, normal, big, maxi as given
-        and a original sized image of max 600x600.
-        This will be accessible as
-        object/image
-
-        and the sizes as
-
-        object/image_mini
-        object/image_normal
-        object/image_big
-        object/image_maxi
-
-        the official API to get tag (in a pagetemplate) is
-        obj.getField('image').tag(obj, scale='mini')
-        ...
-
-        sizes may be the name of a method in the instance or a callable which
-        returns a dict.
-
-        Don't remove scales once they exist! Instead of removing a scale
-        from the list of sizes you should set the size to (0,0). Thus
-        removeScales method is able to find the scales to delete the
-        data.
-
-        Scaling will only be available if PIL is installed!
-
-        If 'DELETE_IMAGE' will be given as value, then all the images
-        will be deleted (None is understood as no-op)
-        """
-
-    # XXX__implements__ = FileField.__implements__ , IImageField
-
     _properties = AWSFileField._properties.copy()
     _properties.update({
         'type' : 'image',
@@ -434,7 +357,7 @@ class AWSImageField(AWSFileField):
     default_view = "view"
 
     def _do_migrate(self, instance):
-        id = self.cookFileId(instance)
+        id = self.getName()
         image = self.getStorage(instance).get(id, instance,
                                               raw=True, unwrapped=True)
         if not isinstance(image, self.fallback_content_class):
@@ -465,7 +388,7 @@ class AWSImageField(AWSFileField):
             return value
         mimetype = kwargs.get('mimetype', self.default_content_type)
         filename = kwargs.get('filename', '')
-        obj = self._make_file(self.cookFileId(instance),
+        obj = self._make_file(self.getName(),
                               title='', file=value, instance=instance)
         setattr(obj, 'filename', filename)
         setattr(obj, 'content_type', mimetype)
@@ -732,21 +655,6 @@ class AWSImageField(AWSFileField):
             self.getStorage(instance).set(id, instance, image,
                                           mimetype=mimetype, filename=filename)
 
-    #def _make_image(self, id, title='', file='', filename=u'',
-    #                content_type='', instance=None, factory=None):
-    #    """Image content factory"""
-
-    #    if not factory:
-    #        factory = self.content_class
-
-    #    if factory == self.fallback_content_class:
-    #        image = factory(id, title, file, content_type=content_type)
-    #        setattr(image, 'filename', filename)
-    #    else:
-    #        image = factory(id, title, file, filename=filename,
-    #                        content_type=content_type)
-    #    return image
-
     security.declarePrivate('scale')
     def scale(self, data, w, h, default_format = 'PNG'):
         """ scale image (with material from ImageTag_Hotfix)"""
@@ -812,7 +720,7 @@ class AWSImageField(AWSFileField):
         """Get the full name of the attribute for the scale
         """
         if scale:
-            return '%s_%s' % (self.cookFileId(instance), scale)
+            return '%s_%s' % (self.getName(), scale)
         else:
             return ''
 
@@ -879,7 +787,7 @@ class AWSImageField(AWSFileField):
                        instance=None, filename='', **kwargs):
         if file is None:
             filename = getattr(value, 'filename', '')
-            file = self._make_file(self.cookFileId(instance),
+            file = self._make_file(self.getName(),
                                     title='', file='', instance=instance)
         if IBaseUnit.isImplementedBy(value):
             mimetype = value.getContentType() or mimetype
@@ -938,7 +846,7 @@ class AWSImageField(AWSFileField):
                                 (safe_unicode(filename),
                                  safe_unicode(e.message)), type='error')
                 #creating default OFS.Image.File object to prevent data loss
-                file = self._make_file(self.cookFileId(instance),
+                file = self._make_file(self.getName(),
                                        title='', file=value, instance=instance,
                                        filename=filename,
                                        content_type=mimetype,
