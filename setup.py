@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0'
+version = '1.0-alpha'
 
 setup(name='collective.contentfiles2aws',
       version=version,
@@ -25,6 +25,7 @@ setup(name='collective.contentfiles2aws',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
+          'boto',
       ],
       entry_points="""
       # -*- Entry points: -*-
