@@ -4,7 +4,7 @@ from boto.s3.connection import S3Connection
 
 from zope.interface import implements
 
-from collective.contentfiles2aws.interfaces import IAWSFileClient
+from collective.contentfiles2aws.client.interfaces import IAWSFileClient
 from collective.contentfiles2aws.client.fsclient import \
     FileClientRetrieveError, FileClientStoreError, FileClientRemoveError
 

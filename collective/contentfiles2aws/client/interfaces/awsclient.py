@@ -1,4 +1,4 @@
-from collective.contentfiles2aws.interfaces.file_client import IFileClient
+from collective.contentfiles2aws.client.interfaces.fsclient import IFileClient
 
 
 class IAWSFileClient(IFileClient):
