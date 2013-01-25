@@ -552,7 +552,7 @@ class AWSImageField(AWSFileField):
                     if isinstance(image, self.content_class):
                         image.remove_source()
                     self.getStorage(instance).unset(id, instance, **kwargs)
-                except KeyError:
+                except (KeyError, AttributeError):
                     pass
 
     security.declareProtected(permissions.ModifyPortalContent, 'createScales')
