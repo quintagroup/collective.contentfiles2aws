@@ -24,9 +24,9 @@ setup(name='collective.contentfiles2aws',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          # -*- Extra requirements: -*-
           'boto',
       ],
+      extras_require = {'tests': ['plone.app.testing',]},
       entry_points="""
       # -*- Entry points: -*-
       [z3c.autoinclude.plugin]
