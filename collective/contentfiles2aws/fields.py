@@ -14,7 +14,7 @@ from ZPublisher.HTTPRequest import FileUpload
 from zope.contenttype import guess_content_type
 
 from Products.Archetypes.utils import shasattr
-from Products.Archetypes.Field import FileField
+from Products.Archetypes.Field import ObjectField, FileField
 from Products.CMFCore import permissions
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.utils import safe_unicode
@@ -101,39 +101,11 @@ class AWSFileField(FileField):
                                           filename=filename,
                                           content_type=content_type)
 
-    def unset(self, instance, **kwargs):
-        __traceback_info__ = (self.getName(), instance, kwargs)
-        self.getStorage(instance).unset(self.getName(), instance, **kwargs)
-
-    security.declarePrivate('_set')
-    def _set(self, instance, value, **kwargs):
-        kwargs['field'] = self
-        # Remove acquisition wrappers
-        value = aq_base(value)
-        __traceback_info__ = (self.getName(), instance, value, kwargs)
-        self.getStorage(instance).set(self.getName(), instance,
-                                        value, **kwargs)
-
-    def _get(self, instance, **kwargs):
-        #TODO: this method is from ObjectField class
-        #      does it really need to be customized?
-        __traceback_info__ = (self.getName(), instance, kwargs)
-        try:
-            kwargs['field'] = self
-            return self.getStorage(instance).get(self.getName(), instance, **kwargs)
-        except AttributeError:
-            # happens if new Atts are added and not yet stored in the instance
-            # @@ and at every other possible occurence of an AttributeError?!!
-            default = self.getDefault(instance)
-            if not kwargs.get('_initializing_', False):
-                self.set(instance, default, _initializing_=True, **kwargs)
-            return default
-
     def get(self, instance, **kwargs):
         if instance.REQUEST.get('%s_migrate' % self.getName(), ''):
             self._do_migrate(instance)
 
-        value = self._get(instance, **kwargs)
+        value = ObjectField.get(self, instance, **kwargs)
         if value and not isinstance(value, self.content_class) and \
                 not isinstance(value, self.fallback_content_class):
             value = self._wrapValue(instance, value)
@@ -143,29 +115,6 @@ class AWSFileField(FileField):
         else:
             return value
 
-    def _make_file(self, id, title='', file='', filename=u'',
-                   content_type='', instance=None, factory=None):
-        """File content factory"""
-
-
-        if not factory:
-            factory = self.content_class
-
-        if not self.use_aws(instance):
-            factory = self.fallback_content_class
-
-        if factory == self.fallback_content_class:
-            if not file:
-                file = StringIO()
-            file_obj =  factory(id, title, file, content_type=content_type)
-            setattr(file_obj, 'filename', filename)
-        else:
-            file_obj = factory(id, title, file, filename=filename,
-                               content_type=content_type)
-
-        return file_obj
-
-    security.declarePrivate('set')
     def set(self, instance, value, **kwargs):
         """
         Assign input value to object. If mimetype is not specified,
@@ -175,7 +124,7 @@ class AWSFileField(FileField):
         if value == "DELETE_FILE":
             if shasattr(instance, '_FileField_types'):
                 delattr(aq_base(instance), '_FileField_types')
-            self.unset(self, instance, **kwargs)
+            ObjectField.unset(self, instance, **kwargs)
             return
 
         if not kwargs.has_key('mimetype'):
@@ -188,8 +137,8 @@ class AWSFileField(FileField):
             file = self.get(instance, raw=True, unwrapped=True)
         else:
             file = None
-        factory = self.content_class
-        if not initializing and not isinstance(file, factory):
+        if not initializing and not isinstance(file, self.content_class) and \
+                not isinstance(file, self.fallback_content_class):
             # Convert to same type as factory
             # This is here mostly for backwards compatibility
             v, m, f = self._migrate_old(file, **kwargs)
@@ -198,7 +147,7 @@ class AWSFileField(FileField):
             obj = self._wrapValue(instance, v, **kwargs)
             # Store so the object gets a _p_jar,
             # if we are using a persistent storage, that is.
-            self._set(instance, obj, **kwargs)
+            ObjectField.set(self, instance, obj, **kwargs)
             file = self.get(instance, raw=True, unwrapped=True)
             # Should be same as factory now, but if it isn't, that's
             # very likely a bug either in the storage implementation
@@ -221,13 +170,48 @@ class AWSFileField(FileField):
             # occurring if someone types in a bogus name in a file upload
             # box (at least under Mozilla).
             value = ''
-        if value.meta_type == self.fallback_content_class.meta_type:
-            # there was error during file upload and we are using
-            # fallback factory, so we set object as is.
-            self._set(instance, value, **kwargs)
-            return
         obj = self._wrapValue(instance, value, **kwargs)
-        self._set(instance, obj, **kwargs)
+        ObjectField.set(self, instance, obj, **kwargs)
+
+    def _make_file(self, id, title='', file='', filename=u'',
+                   content_type='', instance=None, factory=None):
+        """File content factory"""
+
+        if not factory:
+            factory = self.content_class
+
+        if not self.use_aws(instance):
+            factory = self.fallback_content_class
+
+        if factory == self.fallback_content_class:
+            if not file:
+                file = StringIO()
+            file_obj =  factory(id, title, file)
+            setattr(file_obj, 'filename', filename)
+        else:
+            file_obj = factory(id, title, file, filename=filename,
+                               content_type=content_type)
+
+        return file_obj
+
+    def _wrapValue(self, instance, value, **kwargs):
+        """Wraps the value in the content class if it's not wrapped
+        """
+        if isinstance(value, self.content_class) or \
+                isinstance(value, self.fallback_content_class):
+            return value
+        mimetype = kwargs.get('mimetype', self.default_content_type)
+        filename = kwargs.get('filename', '')
+        obj = self._make_file(self.getName(),
+                              title='', file=value, instance=instance)
+        setattr(obj, 'filename', filename)
+        setattr(obj, 'content_type', mimetype)
+        try:
+            delattr(obj, 'title')
+        except (KeyError, AttributeError):
+            pass
+
+        return obj
 
     def url(self, instance):
         fobj = self.get(instance, raw=True, unwrapped=True)
@@ -380,25 +364,6 @@ class AWSImageField(AWSFileField):
                                           filename=filename,
                                           content_type=content_type)
 
-    def _wrapValue(self, instance, value, **kwargs):
-        """Wraps the value in the content class if it's not wrapped
-        """
-        if isinstance(value, self.content_class) or \
-                isinstance(value, self.fallback_content_class):
-            return value
-        mimetype = kwargs.get('mimetype', self.default_content_type)
-        filename = kwargs.get('filename', '')
-        obj = self._make_file(self.getName(),
-                              title='', file=value, instance=instance)
-        setattr(obj, 'filename', filename)
-        setattr(obj, 'content_type', mimetype)
-        try:
-            delattr(obj, 'title')
-        except (KeyError, AttributeError):
-            pass
-
-        return obj
-
     security.declarePrivate('set')
     def set(self, instance, value, **kwargs):
         if value=="DELETE_IMAGE":
@@ -425,7 +390,7 @@ class AWSImageField(AWSFileField):
             obj = self._wrapValue(instance, v, **kwargs)
             # Store so the object gets a _p_jar,
             # if we are using a persistent storage, that is.
-            self._set(instance, obj, **kwargs)
+            ObjectField.set(self, instance, obj, **kwargs)
             file = self.get(instance, raw=True, unwrapped=True)
             # Should be same as factory now, but if it isn't, that's
             # very likely a bug either in the storage implementation
@@ -531,7 +496,7 @@ class AWSImageField(AWSFileField):
         else:
             image = self.getDefault(instance)
 
-        self._set(instance, image, **kwargs)
+        ObjectField.set(self, instance, image, **kwargs)
 
     security.declarePrivate('removeScales')
     def removeScales(self, instance, **kwargs):
