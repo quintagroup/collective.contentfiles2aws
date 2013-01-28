@@ -11,6 +11,7 @@ from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view as View
 
 from Products.CMFPlone.utils import safe_unicode
+from Products.Archetypes.interfaces import IReferenceable
 from plone.i18n.normalizer.interfaces import IIDNormalizer
 
 from collective.contentfiles2aws.interfaces import IAWSUtility
@@ -86,7 +87,7 @@ class AWSFile(File):
 
         sid = ''
         parent = aq_parent(self)
-        if parent:
+        if parent and IReferenceable.providedBy(parent):
             sid = sid + parent.UID()
         sid = sid + self.make_prefix()
         sid = "%s_%s" % (sid, self.id())
