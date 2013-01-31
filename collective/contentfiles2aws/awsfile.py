@@ -33,7 +33,8 @@ def manage_addFile(self,id,file='',title='',precondition='', content_type='',
     self=self.this()
 
     # First, we create the file without data:
-    self._setObject(id, AWSFile(id,title,'',content_type, precondition))
+    self._setObject(id, AWSFile(id,title,'', content_type=content_type,
+                    precondition=precondition))
 
     # Now we "upload" the data.  By doing this in two steps, we
     # can use a database trick to make the upload more efficient.
@@ -72,7 +73,7 @@ class AWSFile(File):
             content_type=self._get_content_type(file, data, id, content_type)
             self.update_data(data, content_type, size)
 
-    def make_prefix(*args):
+    def make_prefix(self, *args):
         data =  str(time() * 1000L) + str(random()*100000000000000000L)
         return md5(data).hexdigest()[-7:]
 
