@@ -19,7 +19,6 @@
                            filename unit/filename | nothing"
                    condition="python:size &gt; 0">
 
-          <p tal:content="unit/filename"/>
           <tal:link condition="showLink">
               <a href="" tal:attributes="href python:field.url(here)">
                 <img tal:condition="icon" src=""

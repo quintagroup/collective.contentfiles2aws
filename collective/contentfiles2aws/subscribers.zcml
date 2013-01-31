@@ -2,15 +2,9 @@
            xmlns:zcml="http://namespaces.zope.org/zcml">
 
   <subscriber
-      for="collective.contentfiles2aws.content.interfaces.IAWSFile
+      for="Products.ATContentTypes.interface.interfaces.IATContentType
            OFS.interfaces.IObjectWillBeRemovedEvent"
-      handler="collective.contentfiles2aws.handlers.before_file_remove"
-      />
-
-  <subscriber
-      for="collective.contentfiles2aws.content.interfaces.IAWSImage
-           OFS.interfaces.IObjectWillBeRemovedEvent"
-      handler="collective.contentfiles2aws.handlers.before_image_remove"
+        handler="collective.contentfiles2aws.handlers.before_file_remove"
       />
 
 </configure>

@@ -5,33 +5,33 @@ from Products.statusmessages.interfaces import IStatusMessage
 
 from collective.contentfiles2aws import MFactory as _
 from collective.contentfiles2aws.interfaces import IAWSUtility
+from collective.contentfiles2aws.interfaces import IAWSField
+from collective.contentfiles2aws.interfaces import IAWSImageField
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
 
 def before_file_remove(obj, event):
-    aws_utility = getUtility(IAWSUtility)
-    as3client = aws_utility.getFileClient()
-    file_obj = obj.getFile()
-    if hasattr(file_obj, 'uploaded_source_id') and file_obj.uploaded_source_id:
-        try:
-            as3client.delete(file_obj.uploaded_source_id)
-        except FileClientRemoveError, e:
-            IStatusMessage(obj.REQUEST).addStatusMessage(_(e.message),
-                                                         type='error')
-            transaction.abort()
-            obj.REQUEST.RESPONSE.redirect(obj.absolute_url())
+    request = obj.REQUEST
+    if request.ACTUAL_URL.endswith('delete_confirmation') and \
+            request.get('REQUEST_METHOD') == 'GET':
+                # delete event is fired by link integrity check, skip it.
+                return
 
-
-def before_image_remove(obj, event):
-    aws_utility = getUtility(IAWSUtility)
-    as3client = aws_utility.getFileClient()
-    image_obj = obj.getImage()
-    if hasattr(image_obj, 'uploaded_source_id') and image_obj.uploaded_source_id:
-        try:
-            as3client.delete(image_obj.uploaded_source_id)
-            obj.schema['image'].removeScales(obj)
-        except FileClientRemoveError, e:
-            IStatusMessage(obj.REQUEST).addStatusMessage(_(e.message),
-                                                         type='error')
-            transaction.abort()
-            obj.REQUEST.RESPONSE.redirect(obj.absolute_url())
-
+    # check if object has aws fileds
+    obj_fields = obj.schema.fields()
+    for f in obj_fields:
+        if IAWSField.providedBy(f):
+            aws_utility = getUtility(IAWSUtility)
+            as3client = aws_utility.getFileClient()
+            accessor= f.getAccessor(obj)
+            field_content = accessor()
+            if hasattr(field_content, 'uploaded_source_id') and\
+                    field_content.uploaded_source_id:
+                try:
+                    as3client.delete(field_content.uploaded_source_id)
+                    if IAWSImageField.providedBy(f):
+                        f.removeScales(obj)
+                except FileClientRemoveError, e:
+                    IStatusMessage(obj.REQUEST).addStatusMessage(_(e.message),
+                                                                 type='error')
+                    transaction.abort()
+                    obj.REQUEST.RESPONSE.redirect(obj.absolute_url())

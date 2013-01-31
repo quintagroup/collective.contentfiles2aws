@@ -11,6 +11,7 @@ from AccessControl import ClassSecurityInfo
 from ZODB.POSException import ConflictError
 from ZPublisher.HTTPRequest import FileUpload
 
+from zope.interface import implements
 from zope.contenttype import guess_content_type
 
 from Products.Archetypes.utils import shasattr
@@ -30,7 +31,8 @@ from collective.contentfiles2aws.awsfile import AWSFile
 from collective.contentfiles2aws.awsimage import AWSImage
 from collective.contentfiles2aws.widgets import AWSFileWidget
 from collective.contentfiles2aws.widgets import AWSImageWidget
-
+from collective.contentfiles2aws.interfaces import IAWSFileField
+from collective.contentfiles2aws.interfaces import IAWSImageField
 from collective.contentfiles2aws.config import AWSCONF_SHEET
 from collective.contentfiles2aws.client.fsclient import FileClientStoreError
 from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
@@ -53,6 +55,8 @@ else:
 class AWSFileField(FileField):
     """Something that may be a file, but is not an image and doesn't
     want text format conversion"""
+
+    implements(IAWSFileField)
 
     _properties = FileField._properties.copy()
     _properties.update({
@@ -318,6 +322,9 @@ registerField(AWSFileField,
 
 
 class AWSImageField(AWSFileField):
+
+    implements(IAWSImageField)
+
     _properties = AWSFileField._properties.copy()
     _properties.update({
         'type' : 'image',
