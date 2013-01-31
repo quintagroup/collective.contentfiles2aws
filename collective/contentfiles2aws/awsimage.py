@@ -37,7 +37,8 @@ def manage_addImage(self, id, file, title='', precondition='', content_type='',
     self=self.this()
 
     # First, we create the image without data:
-    self._setObject(id, AWSImage(id,title,'',content_type, precondition))
+    self._setObject(id, AWSImage(id, title, '', content_type=content_type,
+                                                precondition=precondition))
 
     # Now we "upload" the data.  By doing this in two steps, we
     # can use a database trick to make the upload more efficient.
