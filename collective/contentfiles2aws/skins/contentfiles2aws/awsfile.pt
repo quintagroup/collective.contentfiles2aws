@@ -53,7 +53,7 @@
         <tal:migrate_block tal:condition="python:field.migrate(here)">
             <dl class="portalMessage info">
               <dt>Info</dt>
-              <dd>For some reasons we could not save this file into cloud. Currently it is stores in database.</dd>
+              <dd>For some reasons we could not save this file into cloud. Currently it is stored in database.</dd>
             </dl>
             <input type='hidden' value='migrate'
                    tal:attributes="name string:${field/getName}_migrate">
