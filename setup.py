@@ -5,7 +5,7 @@ version = '1.0-alpha'
 
 setup(name='collective.contentfiles2aws',
       version=version,
-      description="",
+      description="Allows to store files and images on amazon s3 service.",
       long_description=open("README.txt").read() + "\n" +
                        open(os.path.join("docs", "HISTORY.txt")).read(),
       # Get more strings from
@@ -13,7 +13,7 @@ setup(name='collective.contentfiles2aws',
       classifiers=[
         "Programming Language :: Python",
         ],
-      keywords='',
+      keywords='plone aws',
       author='',
       author_email='',
       url='http://svn.plone.org/svn/collective/',

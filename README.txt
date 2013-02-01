@@ -22,11 +22,13 @@ This add-on was tested for the Plone 3.3.5.
 Requirements
 ------------
 
-This package requires boto library (https://github.com/boto/boto)
+This package requires boto library (http://github.com/boto/boto)
 that is compatible with python 2.4
 
 This package was developed and tested with @1011 revision
-of boto library (http://boto.googlecode.com/svn/trunk@1011)
+of boto library. From manual checkout use this command::
+
+  svn co http://boto.googlecode.com/svn/trunk@1011
 
 
 Installation
