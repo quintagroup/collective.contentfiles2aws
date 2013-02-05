@@ -4,14 +4,19 @@ from zope.app.component.hooks import getSite
 from Products.CMFCore.utils import getToolByName
 
 from collective.contentfiles2aws.client import AWSFileClient
-from collective.contentfiles2aws.interfaces import IAWSUtility
+from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
 from collective.contentfiles2aws.config import AWSCONF_SHEET
 
 
-class AWSUtility(object):
+class AWSFileClientUtility(object):
     """
     """
-    implements(IAWSUtility)
+    implements(IAWSFileClientUtility)
+
+    def active(self):
+        pp = getToolByName(getSite(), 'portal_properties')
+        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
+        return awsconf_sheet.getProperty('USE_AWS')
 
     def getAWSConfiguration(self):
         """ Collect configuration infomation for aws client. """
@@ -36,11 +41,11 @@ class AWSUtility(object):
         return self.getAWSConfiguration()['aws_filename_prefix']
 
     def getFileClient(self):
-        """ Provide a aws file client. """
+        """ Provide an aws file client. """
         config = self.getAWSConfiguration()
         client = AWSFileClient(config['aws_key_id'],
                                config['aws_seecret_key'],
                                config['aws_bucket_name'])
         return client
 
-aws_utility = AWSUtility()
+aws_utility = AWSFileClientUtility()

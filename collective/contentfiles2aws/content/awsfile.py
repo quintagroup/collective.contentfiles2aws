@@ -12,6 +12,7 @@ from Products.ATContentTypes import ATCTMessageFactory as _
 from Products.validation import V_REQUIRED
 
 from collective.contentfiles2aws.config import PROJECTNAME
+from collective.contentfiles2aws.storage import AWSStorage
 from collective.contentfiles2aws.fields import AWSFileField
 from collective.contentfiles2aws.widgets import AWSFileWidget
 from collective.contentfiles2aws.content.interfaces import IAWSFile
@@ -22,13 +23,14 @@ __docformat__ = 'restructuredtext'
 
 AWSFileSchema = ATContentTypeSchema.copy() + Schema((
     AWSFileField('file',
-                 required=True,
-                 primary=True,
-                 searchable=False,
-                 languageIndependent=True,
-                 validators = (('isNonEmptyFile', V_REQUIRED),
-                                ('checkFileMaxSize', V_REQUIRED)),
-                 widget = AWSFileWidget(
+              required=True,
+              primary=True,
+              searchable=False,
+              languageIndependent=True,
+              storage = AWSStorage(),
+              validators = (('isNonEmptyFile', V_REQUIRED),
+                             ('checkFileMaxSize', V_REQUIRED)),
+              widget = AWSFileWidget(
                            description = '',
                            label=_(u'label_file', default=u'File'),
                            show_content_type = False,)),

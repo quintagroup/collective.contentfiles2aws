@@ -1,7 +1,10 @@
 from zope.interface import Interface
 
 
-class IAWSUtility(Interface):
+class IAWSFileClientUtility(Interface):
     """
     """
-    pass
+
+    def getFileClient():
+        """
+        """
