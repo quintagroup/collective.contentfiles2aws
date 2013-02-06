@@ -4,7 +4,13 @@
   <subscriber
       for="Products.ATContentTypes.interface.interfaces.IATContentType
            OFS.interfaces.IObjectWillBeRemovedEvent"
-        handler="collective.contentfiles2aws.handlers.before_file_remove"
+      handler="collective.contentfiles2aws.handlers.before_file_remove"
+      />
+
+  <subscriber
+      for="Products.ATContentTypes.interface.interfaces.IATContentType
+           zope.app.container.contained.ObjectRemovedEvent"
+      handler="collective.contentfiles2aws.handlers.abort_remove"
       />
 
 </configure>
