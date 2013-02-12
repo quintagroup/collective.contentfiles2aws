@@ -83,6 +83,10 @@ class AWSStorage(AnnotationStorage):
 
     security.declarePrivate('get')
     def get(self, name, instance, **kwargs):
+        aws_utility = getUtility(IAWSFileClientUtility)
+        if not aws_utility.active():
+            return AnnotationStorage.get(self, name, instance, **kwargs)
+
         file_ = AnnotationStorage.get(self, name, instance, **kwargs)
         if instance.REQUEST.get('%s_migrate' % name, '') or \
                 (kwargs.has_key('migrate') and kwargs['migrate']):
@@ -175,6 +179,10 @@ class AWSStorage(AnnotationStorage):
 
     security.declarePrivate('unset')
     def unset(self, name, instance, **kwargs):
+        aws_utility = getUtility(IAWSFileClientUtility)
+        if not aws_utility.active():
+            return AnnotationStorage.unset(self, name, instance, **kwargs)
+
         file_ = self.get(name, instance, **kwargs)
         if isinstance(file_, AWSFile):
             file_.remove_source()
