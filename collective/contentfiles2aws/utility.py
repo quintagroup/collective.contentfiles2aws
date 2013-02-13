@@ -29,10 +29,10 @@ class AWSFileClientUtility(object):
         aws_bucket_name = awsconf_sheet.getProperty('AWS_BUCKET_NAME')
         aws_filename_prefix = awsconf_sheet.getProperty('AWS_FILENAME_PREFIX')
 
-        return {'aws_key_id':aws_key_id,
-                'aws_seecret_key':aws_seecret_key,
-                'aws_bucket_name':aws_bucket_name,
-                'aws_filename_prefix':aws_filename_prefix}
+        return {'aws_key_id': aws_key_id,
+                'aws_seecret_key': aws_seecret_key,
+                'aws_bucket_name': aws_bucket_name,
+                'aws_filename_prefix': aws_filename_prefix}
 
     def getBucketName(self):
         return self.getAWSConfiguration()['aws_bucket_name']
@@ -45,7 +45,9 @@ class AWSFileClientUtility(object):
         config = self.getAWSConfiguration()
         client = AWSFileClient(config['aws_key_id'],
                                config['aws_seecret_key'],
-                               config['aws_bucket_name'])
+                               config['aws_bucket_name'],
+                               aws_filename_prefix=
+                               config['aws_filename_prefix'])
         return client
 
 aws_utility = AWSFileClientUtility()
