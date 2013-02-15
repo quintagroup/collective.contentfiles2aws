@@ -10,5 +10,6 @@
   <include file="skins.zcml"/>
   <include file="subscribers.zcml"/>
   <include package=".browser"/>
+  <include file="catalog.zcml"/>
 
 </configure>

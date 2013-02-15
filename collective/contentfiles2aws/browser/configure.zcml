@@ -11,4 +11,20 @@
       permission="cmf.ManagePortal"
       />
 
+  <browser:page
+      for="*"
+      name="aws_file_url"
+      class=".util.AWSUtilView"
+      attribute="get_file_url"
+      permission="cmf.ManagePortal"
+      />
+
+  <browser:page
+      for="*"
+      name="aws_image_url"
+      class=".util.AWSUtilView"
+      attribute="get_image_url"
+      permission="cmf.ManagePortal"
+      />
+
 </configure>
