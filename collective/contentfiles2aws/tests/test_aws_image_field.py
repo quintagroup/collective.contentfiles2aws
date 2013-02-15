@@ -5,7 +5,7 @@ from OFS.Image import Image
 
 from collective.contentfiles2aws.awsfile import AWSFile
 from collective.contentfiles2aws.testing import \
-        AWS_CONTENT_FILES_INTEGRATION_TESTING
+    AWS_CONTENT_FILES_INTEGRATION_TESTING
 
 
 class AWSImageFieldTestCase(unittest2.TestCase):
@@ -22,7 +22,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
         fid = self.portal.invokeFactory('AWSImage', 'awsimage')
         self.awsimage = getattr(self.portal, fid)
         self.awsimage.update(image=self._get_image())
-        self.conf_sheet=self.portal.portal_properties.contentfiles2aws
+        self.conf_sheet = self.portal.portal_properties.contentfiles2aws
 
     def test_wrapValue(self):
         field = self.awsimage.schema['image']
@@ -85,7 +85,7 @@ class AWSImageFieldTestCase(unittest2.TestCase):
         self.assert_(
             tag.startswith('<img src="http://contentfiles.s3.amazonaws.com/'))
         self.assert_(tag.endswith(('image_thumb_image.gif" alt="" title=""'
-                                   ' height="" width="" />')))
+                                   ' height="16" width="16" />')))
 
 
 def test_suite():

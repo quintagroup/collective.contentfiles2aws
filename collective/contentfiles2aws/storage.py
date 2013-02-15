@@ -21,19 +21,18 @@ from collective.contentfiles2aws.client.fsclient import FileClientRemoveError
 
 
 class AWSStorage(AnnotationStorage):
-    """
-    """
+    """ Archetype storage that stores data to amazon s3 service. """
 
     security = ClassSecurityInfo()
 
     def make_prefix(self):
-        data =  str(time() * 1000L) + str(random()*100000000000000000L)
+        data = str(time() * 1000L) + str(random() * 100000000000000000L)
         return md5(data).hexdigest()[-7:]
 
     def getNormalizedName(self, filename):
         normalizer = getUtility(IIDNormalizer)
         return ".".join([normalizer.normalize(safe_unicode(n))
-                            for n in splitext(filename)])
+                         for n in splitext(filename)])
 
     def getSourceId(self, name, filename, instance, fresh=False):
         sid = ''
@@ -76,7 +75,13 @@ class AWSStorage(AnnotationStorage):
         if not content_type:
             content_type = getattr(file_, 'content_type')
 
-        new_file = AWSFile(file_.id(), size = len(data),
+        if not width:
+            width = getattr(file_, 'width', '')
+
+        if not height:
+            height = getattr(file_, 'height', '')
+
+        new_file = AWSFile(file_.id(), size=len(data),
                            filename=filename, content_type=content_type)
         try:
             self.update_source(new_file, data, instance,
@@ -94,7 +99,7 @@ class AWSStorage(AnnotationStorage):
 
         file_ = AnnotationStorage.get(self, name, instance, **kwargs)
         if instance.REQUEST.get('%s_migrate' % name, '') or \
-                (kwargs.has_key('migrate') and kwargs['migrate']):
+                ('migrate' in kwargs and kwargs['migrate']):
             # check if object is already migrated
             if isinstance(file_, AWSFile):
                 return file_
@@ -129,7 +134,7 @@ class AWSStorage(AnnotationStorage):
                                   content_type=content_type)
                 else:
                     value = File(value.id(), '', str(value.data),
-                                content_type=content_type)
+                                 content_type=content_type)
                 setattr(value, 'filename', filename)
             AnnotationStorage.set(self, name, instance, value, **kwargs)
             return
@@ -147,22 +152,30 @@ class AWSStorage(AnnotationStorage):
                 except (FileClientRemoveError, FileClientStoreError), e:
                     request = instance.REQUEST
                     IStatusMessage(request).addStatusMessage(
-                            u"Couldn't update %s file to storage. %s" % \
-                                    (safe_unicode(filename),
-                                    safe_unicode(e.message)), type='error')
-                    AnnotationStorage.set(self, name, instance, value, **kwargs)
+                        u"Couldn't update %s file to storage. %s" %
+                        (safe_unicode(filename),
+                         safe_unicode(e.message)), type='error')
+                    AnnotationStorage.set(self, name, instance,
+                                          value, **kwargs)
             else:
                 try:
-                    file_ = self._do_migrate(file_, instance, data=value.data)
+                    file_ = self._do_migrate(file_, instance,
+                                             data=value.data,
+                                             filename=filename,
+                                             content_type=content_type,
+                                             width=width,
+                                             height=height)
                 except (FileClientRemoveError, FileClientStoreError):
                     request = instance.REQUEST
                     IStatusMessage(request).addStatusMessage(
-                            u"Couldn't update %s file to storage. %s" % \
-                                    (safe_unicode(filename),
-                                    safe_unicode(e.message)), type='error')
-                    AnnotationStorage.set(self, name, instance, value, **kwargs)
+                        u"Couldn't update %s file to storage. %s" %
+                        (safe_unicode(filename),
+                         safe_unicode(e.message)), type='error')
+                    AnnotationStorage.set(self, name, instance,
+                                          value, **kwargs)
                 else:
-                    AnnotationStorage.set(self, name, instance, file_, **kwargs)
+                    AnnotationStorage.set(self, name, instance,
+                                          file_, **kwargs)
         else:
             if value.size:
                 file_ = AWSFile(name)
@@ -172,13 +185,15 @@ class AWSStorage(AnnotationStorage):
                 except (FileClientRemoveError, FileClientStoreError), e:
                     request = instance.REQUEST
                     IStatusMessage(request).addStatusMessage(
-                            u"Couldn't update %s file to storage. %s" % \
-                                    (safe_unicode(filename),
-                                    safe_unicode(e.message)), type='error')
+                        u"Couldn't update %s file to storage. %s" %
+                        (safe_unicode(filename),
+                         safe_unicode(e.message)), type='error')
 
-                    AnnotationStorage.set(self, name, instance, value, **kwargs)
+                    AnnotationStorage.set(self, name, instance,
+                                          value, **kwargs)
                 else:
-                    AnnotationStorage.set(self, name, instance, file_, **kwargs)
+                    AnnotationStorage.set(self, name, instance,
+                                          file_, **kwargs)
             else:
                 AnnotationStorage.set(self, name, instance, file_, **kwargs)
 
