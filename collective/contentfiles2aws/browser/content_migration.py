@@ -1,7 +1,9 @@
 import transaction
-from zope.component import getUtility
+from zope.component import getUtility, queryMultiAdapter
 from Products.Five.browser import BrowserView
 from Products.CMFCore.utils import getToolByName
+
+from plone.indexer.interfaces import IIndexableObject
 
 from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
 
@@ -21,6 +23,11 @@ class ContentMigrationView(BrowserView):
             return int(bsize)
         return self.bsize
 
+    def _update_metadata(self, catalog, obj):
+        uid = '/'.join(obj.getPhysicalPath())
+        wrapper = queryMultiAdapter((obj, catalog), IIndexableObject)
+        catalog._catalog.updateMetadata(wrapper, uid)
+
     def _migrate(self, query, types):
         count = 0
         results = {}
@@ -37,6 +44,7 @@ class ContentMigrationView(BrowserView):
                         migrate = '%s_migrate' % name
                         obj.REQUEST[migrate] = True
                         f.get(obj)
+                        self._update_metadata(pc, obj)
                         count = count + 1
                         if count % self.get_bsize() == 0:
                             transaction.savepoint(optimistic=True)
