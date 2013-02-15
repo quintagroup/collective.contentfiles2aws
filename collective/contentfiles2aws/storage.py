@@ -3,7 +3,7 @@ from md5 import md5
 from random import random
 from os.path import splitext
 
-from OFS.Image import File
+from OFS.Image import File, Image
 from AccessControl import ClassSecurityInfo
 
 from zope.component import getUtility
@@ -39,43 +39,48 @@ class AWSStorage(AnnotationStorage):
         sid = ''
         if IReferenceable.providedBy(instance):
             sid = sid + instance.UID()
-        sid = sid + self.make_prefix()
+        sid = "%s_%s" % (sid, self.make_prefix())
         sid = "%s_%s" % (sid, name)
         fname = self.getNormalizedName(filename)
         if fname:
             sid = '%s_%s' % (sid, fname)
         return sid
 
-    def update_source(self, file_, data, instance, filename, content_type):
+    def update_source(self, file_, data, instance,
+                      filename, content_type, width, height):
         aws_utility = getUtility(IAWSFileClientUtility)
         as3client = aws_utility.getFileClient()
         if file_.source_id:
             as3client.delete(file_.source_id)
 
-        source_id = self.getSourceId(file_.id(), filename, instance, fresh=True)
+        source_id = self.getSourceId(file_.id(), filename,
+                                     instance, fresh=True)
         as3client.put(source_id, data, mimetype=content_type)
         setattr(file_, 'source_id', source_id)
         setattr(file_, 'size', len(data))
         setattr(file_, 'filename', filename)
         setattr(file_, 'content_type', content_type)
 
-    def _do_migrate(self, file_, instance, data=None):
+        if width and height:
+            file_.width = width
+            file_.height = height
+
+    def _do_migrate(self, file_, instance, data=None, filename='',
+                    content_type='', width='', height=''):
         if not data:
             data = file_.data
 
-        filename = getattr(file_, 'filename')
-        content_type = getattr(file_, 'content_type')
-        size = getattr(file_, 'content_type')
-        new_file = AWSFile(file_.id(),
-                           size = size,
-                           filename=filename,
-                           content_type=content_type)
+        if not filename:
+            filename = getattr(file_, 'filename')
+
+        if not content_type:
+            content_type = getattr(file_, 'content_type')
+
+        new_file = AWSFile(file_.id(), size = len(data),
+                           filename=filename, content_type=content_type)
         try:
-            self.update_source(new_file,
-                               data,
-                               instance,
-                               filename,
-                               content_type)
+            self.update_source(new_file, data, instance,
+                               filename, content_type, width, height)
             return new_file
         except (FileClientRemoveError, FileClientStoreError):
             # notify user???
@@ -108,20 +113,26 @@ class AWSStorage(AnnotationStorage):
         """Set a value under the key 'name' for retrevial by/for
         instance."""
 
+        # collect value info
+        filename = getattr(value, 'filename', '')
+        content_type = getattr(value, 'content_type', '')
+        width = getattr(value, 'width', '')
+        height = getattr(value, 'height', '')
+
         aws_utility = getUtility(IAWSFileClientUtility)
         if not aws_utility.active():
             if isinstance(value, AWSFile):
-                # use default OFS.Image
-                filename = getattr(value, 'filename')
-                content_type = getattr(value, 'content_type')
-                value = File(value.id(), '', str(value.data),
-                             content_type=content_type)
+                # use default OFS.Image or OFS.File
+                if width and height:
+                    # we have image
+                    value = Image(value.id(), '', str(value.data),
+                                  content_type=content_type)
+                else:
+                    value = File(value.id(), '', str(value.data),
+                                content_type=content_type)
                 setattr(value, 'filename', filename)
             AnnotationStorage.set(self, name, instance, value, **kwargs)
             return
-
-        filename = getattr(value, 'filename')
-        content_type = getattr(value, 'content_type')
 
         try:
             file_ = self.get(name, instance, **kwargs)
@@ -131,11 +142,8 @@ class AWSStorage(AnnotationStorage):
         if file_:
             if isinstance(file_, AWSFile):
                 try:
-                    self.update_source(file_,
-                                       value.data,
-                                       instance,
-                                       filename,
-                                       content_type)
+                    self.update_source(file_, value.data, instance,
+                                       filename, content_type, width, height)
                 except (FileClientRemoveError, FileClientStoreError), e:
                     request = instance.REQUEST
                     IStatusMessage(request).addStatusMessage(
@@ -159,11 +167,8 @@ class AWSStorage(AnnotationStorage):
             if value.size:
                 file_ = AWSFile(name)
                 try:
-                    self.update_source(file_,
-                                       value.data,
-                                       instance,
-                                       filename,
-                                       content_type)
+                    self.update_source(file_, value.data, instance,
+                                       filename, content_type, width, height)
                 except (FileClientRemoveError, FileClientStoreError), e:
                     request = instance.REQUEST
                     IStatusMessage(request).addStatusMessage(

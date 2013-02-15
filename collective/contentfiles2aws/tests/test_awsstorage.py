@@ -4,8 +4,6 @@ import unittest2
 from OFS.Image import File
 from zope.component import getUtility
 
-from plone.app.testing import setRoles, TEST_USER_ID
-
 from collective.contentfiles2aws.awsfile import AWSFile
 from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
 from collective.contentfiles2aws.testing import \
@@ -58,11 +56,9 @@ class AWSStorageTestCase(unittest2.TestCase):
 
     def test_update_source(self):
         """ Test update_source method."""
-        self.storage.update_source(self.aws_file,
-                                   'new text',
-                                   self.awsfile,
-                                   'newfilename.gif',
-                                   'image/gif')
+        self.storage.update_source(self.aws_file, 'new text', self.awsfile,
+                                   'newfilename.gif', 'image/gif', width='100',
+                                   height='150')
 
         aws_utility = getUtility(IAWSFileClientUtility)
         as3client = aws_utility.getFileClient()
@@ -103,6 +99,7 @@ class AWSStorageTestCase(unittest2.TestCase):
         storage = file_.schema['file'].storage
 
         ofsfile = File(id, '', self._get_image(), content_type='image/jpeg')
+        setattr(ofsfile, 'filename', 'image.jpg')
         storage.set('file', file_, ofsfile)
         self.assert_(storage.get('file', file_), File)
 
