@@ -42,7 +42,9 @@ class AWSUtilView(BrowserView):
         if isinstance(value, AWSFile):
             url = value.absolute_url()
         else:
-            url = '%s/%s_%s' % (instance.absolute_url(), name, scale)
+            url = '%s/%s' % (instance.absolute_url(), name)
+            if scale:
+                url = '%s_%s' % (url, scale)
         return url
 
     def get_file_url(self, instance, name='file', brain=True):
