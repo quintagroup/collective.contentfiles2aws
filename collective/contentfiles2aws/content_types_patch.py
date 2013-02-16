@@ -1,9 +1,7 @@
-from Products.Archetypes.atapi import Schema
-from Products.ATContentTypes.content.file import ATFile
-from Products.ATContentTypes.content.image import ATImage
-from Products.Archetypes.atapi import PrimaryFieldMarshaller
-from Products.ATContentTypes.content.schemata import ATContentTypeSchema
-from Products.ATContentTypes.content.schemata import finalizeATCTSchema
+from Products.ATContentTypes.content.file import ATFile, ATFileSchema
+from Products.ATContentTypes.content.image import ATImage, ATImageSchema
+from Products.ATContentTypes.content.newsitem import ATNewsItem, \
+    ATNewsItemSchema
 from Products.ATContentTypes import ATCTMessageFactory as _
 from Products.validation import V_REQUIRED
 from Products.ATContentTypes.config import PROJECTNAME
@@ -15,7 +13,8 @@ from collective.contentfiles2aws.widgets import AWSFileWidget, AWSImageWidget
 from collective.contentfiles2aws.storage import AWSStorage
 
 
-ATFileSchema = ATContentTypeSchema.copy() + Schema((
+ATFileSchema = ATFileSchema.copy()
+ATFileSchema['file'] = \
     AWSFileField('file',
               required=True,
               primary=True,
@@ -27,18 +26,14 @@ ATFileSchema = ATContentTypeSchema.copy() + Schema((
               widget = AWSFileWidget(
                         description = '',
                         label=_(u'label_file', default=u'File'),
-                        show_content_type = False,)),
-    ), marshall=PrimaryFieldMarshaller()
-    )
-
-ATFileSchema['title'].required = False
-finalizeATCTSchema(ATFileSchema)
+                        show_content_type = False,))
 
 ATFile.schema = ATFileSchema
 registerATCT(ATFile, PROJECTNAME)
 
 
-ATImageSchema = ATContentTypeSchema.copy() + Schema((
+ATImageSchema = ATImageSchema.copy()
+ATImageSchema['image'] = \
     AWSImageField('image',
                required=True,
                primary=True,
@@ -61,13 +56,35 @@ ATImageSchema = ATContentTypeSchema.copy() + Schema((
                widget = AWSImageWidget(
                         description = '',
                         label= _(u'label_image', default=u'Image'),
-                        show_content_type = False,)),
-
-    ), marshall=PrimaryFieldMarshaller()
-    )
-
-ATImageSchema['title'].required = False
-finalizeATCTSchema(ATImageSchema)
+                        show_content_type = False,))
 
 ATImage.schema = ATImageSchema
 registerATCT(ATImage, PROJECTNAME)
+
+
+
+ATNewsItemSchema = ATNewsItemSchema.copy()
+ATNewsItemSchema['image'] = \
+    AWSImageField('image',
+           required = False,
+           storage = AWSStorage(migrate=True),
+           languageIndependent = True,
+           max_size = zconf.ATNewsItem.max_image_dimension,
+           sizes= {'large'   : (768, 768),
+                   'preview' : (400, 400),
+                   'mini'    : (200, 200),
+                   'thumb'   : (128, 128),
+                   'tile'    :  (64, 64),
+                   'icon'    :  (32, 32),
+                   'listing' :  (16, 16),
+                  },
+           validators = (('isNonEmptyFile', V_REQUIRED),
+                                ('checkNewsImageMaxSize', V_REQUIRED)),
+           widget = AWSImageWidget(
+               description = _(u'help_news_image', default=u'Will be shown in the news listing, and in the news item itself. Image will be scaled to a sensible size.'),
+               label= _(u'label_news_image', default=u'Image'),
+               show_content_type = False)
+           )
+
+ATNewsItem.schema = ATNewsItemSchema
+registerATCT(ATNewsItem, PROJECTNAME)
