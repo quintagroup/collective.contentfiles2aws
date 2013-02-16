@@ -98,7 +98,9 @@ class AWSStorage(AnnotationStorage):
             return AnnotationStorage.get(self, name, instance, **kwargs)
 
         file_ = AnnotationStorage.get(self, name, instance, **kwargs)
-        if instance.REQUEST.get('%s_migrate' % name, '') or \
+        request = instance.REQUEST
+        if not isinstance(request, type('')) and \
+                request.get('%s_migrate' % name, '') or \
                 ('migrate' in kwargs and kwargs['migrate']):
             # check if object is already migrated
             if isinstance(file_, AWSFile):
