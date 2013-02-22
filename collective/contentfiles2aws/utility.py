@@ -4,14 +4,19 @@ from zope.app.component.hooks import getSite
 from Products.CMFCore.utils import getToolByName
 
 from collective.contentfiles2aws.client import AWSFileClient
-from collective.contentfiles2aws.interfaces import IAWSUtility
+from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
 from collective.contentfiles2aws.config import AWSCONF_SHEET
 
 
-class AWSUtility(object):
+class AWSFileClientUtility(object):
     """
     """
-    implements(IAWSUtility)
+    implements(IAWSFileClientUtility)
+
+    def active(self):
+        pp = getToolByName(getSite(), 'portal_properties')
+        awsconf_sheet = getattr(pp, AWSCONF_SHEET)
+        return awsconf_sheet.getProperty('USE_AWS')
 
     def getAWSConfiguration(self):
         """ Collect configuration infomation for aws client. """
@@ -24,10 +29,10 @@ class AWSUtility(object):
         aws_bucket_name = awsconf_sheet.getProperty('AWS_BUCKET_NAME')
         aws_filename_prefix = awsconf_sheet.getProperty('AWS_FILENAME_PREFIX')
 
-        return {'aws_key_id':aws_key_id,
-                'aws_seecret_key':aws_seecret_key,
-                'aws_bucket_name':aws_bucket_name,
-                'aws_filename_prefix':aws_filename_prefix}
+        return {'aws_key_id': aws_key_id,
+                'aws_seecret_key': aws_seecret_key,
+                'aws_bucket_name': aws_bucket_name,
+                'aws_filename_prefix': aws_filename_prefix}
 
     def getBucketName(self):
         return self.getAWSConfiguration()['aws_bucket_name']
@@ -36,11 +41,13 @@ class AWSUtility(object):
         return self.getAWSConfiguration()['aws_filename_prefix']
 
     def getFileClient(self):
-        """ Provide a aws file client. """
+        """ Provide an aws file client. """
         config = self.getAWSConfiguration()
         client = AWSFileClient(config['aws_key_id'],
                                config['aws_seecret_key'],
-                               config['aws_bucket_name'])
+                               config['aws_bucket_name'],
+                               aws_filename_prefix=
+                               config['aws_filename_prefix'])
         return client
 
-aws_utility = AWSUtility()
+aws_utility = AWSFileClientUtility()

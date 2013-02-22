@@ -1,6 +1,3 @@
-from ZClasses import createZClassForBase
-from AccessControl.Permissions import add_documents_images_and_files
-
 from zope.i18nmessageid import MessageFactory
 
 from Products.CMFCore import utils
@@ -8,33 +5,13 @@ from Products.Archetypes import atapi
 
 from collective.contentfiles2aws.content import AWSFile
 from collective.contentfiles2aws.content import AWSImage
-from collective.contentfiles2aws import awsfile
-from collective.contentfiles2aws import awsimage
 from collective.contentfiles2aws import config
+from collective.contentfiles2aws import content_types_patch
 
 MFactory = MessageFactory(config.PROJECTNAME)
 
-createZClassForBase(awsfile.AWSFile, globals(), 'ZFile', 'AWSFile')
 
 def initialize(context):
-
-    context.registerClass(
-        awsfile.AWSFile,
-        permission=add_documents_images_and_files,
-        constructors=(('fileAdd', awsfile.manage_addFileForm),
-                       awsfile.manage_addFile),
-        icon='images/File_icon.gif',
-        legacy=(awsfile.manage_addFile,),
-        )
-
-    context.registerClass(
-        awsimage.AWSImage,
-        permission=add_documents_images_and_files,
-        constructors=(('imageAdd', awsimage.manage_addImageForm),
-                       awsimage.manage_addImage),
-        icon='images/Image_icon.gif',
-        legacy=(awsimage.manage_addImage,),
-        )
 
     content_types, constructors, ftis = atapi.process_types(
         atapi.listTypes(config.PROJECTNAME),

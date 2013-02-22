@@ -1,0 +1,30 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="collective.contentfiles2aws">
+
+  <browser:view
+      for="*"
+      name="migrate-content"
+      class=".content_migration.ContentMigrationView"
+      permission="cmf.ManagePortal"
+      />
+
+  <browser:page
+      for="*"
+      name="aws_file_url"
+      class=".util.AWSUtilView"
+      attribute="get_file_url"
+      permission="cmf.ManagePortal"
+      />
+
+  <browser:page
+      for="*"
+      name="aws_image_url"
+      class=".util.AWSUtilView"
+      attribute="get_image_url"
+      permission="cmf.ManagePortal"
+      />
+
+</configure>

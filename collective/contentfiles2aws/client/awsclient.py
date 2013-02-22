@@ -28,17 +28,24 @@ class AWSFileClient(object):
 
     implements(IAWSFileClient)
 
-    def __init__(self, aws_key_id, aws_seecret_key, bucket_name):
+    def __init__(self, aws_key_id, aws_seecret_key, bucket_name,
+                 aws_filename_prefix=None):
         self._aws_key_id = aws_key_id
         self._aws_seecret_key = aws_seecret_key
         self.bucket_name = bucket_name
         self.connection = S3Connection(aws_key_id, aws_seecret_key)
+        self.aws_filename_prefix = aws_filename_prefix
 
     def _get_bucket_name(self, **kw):
         bucket_name = self.bucket_name
         if hasattr(kw, 'bucket_name') and kw['bucket_name']:
             bucket_name = kw['bucket_name']
         return bucket_name
+
+    def _get_key(self, filename):
+        if not self.aws_filename_prefix:
+            return filename
+        return '%s/%s' % (self.aws_filename_prefix, filename)
 
     def get(self, filename, **kw):
         """ Get file with specified filename from amazon.
@@ -57,7 +64,7 @@ class AWSFileClient(object):
 
         try:
             bucket = self.connection.get_bucket(bucket_name)
-            key = bucket.get_key(filename)
+            key = bucket.get_key(self._get_key(filename))
             if key:
                 return key.get_contents_as_string()
         except S3ResponseError, e:
@@ -89,9 +96,9 @@ class AWSFileClient(object):
             else:
                 bucket = conn.create_bucket(bucket_name)
 
-            key = bucket.get_key(filename)
+            key = bucket.get_key(self._get_key(filename))
             if not key:
-                key = bucket.new_key(filename)
+                key = bucket.new_key(self._get_key(filename))
             if mimetype:
                 key.set_metadata('Content-Type', mimetype)
             key.set_contents_from_string(data)
@@ -111,7 +118,7 @@ class AWSFileClient(object):
         bucket_name = self._get_bucket_name(**kw)
         try:
             bucket = self.connection.get_bucket(bucket_name)
-            bucket.delete_key(filename)
+            bucket.delete_key(self._get_key(filename))
         except S3ResponseError, e:
             logger.exception('%s, %s, %s' % (e.status, e.reason, e.message))
             raise AWSFileClientRemoveError(u"Couldn't delete %s file. %s" % \
@@ -122,4 +129,4 @@ class AWSFileClient(object):
         bucket_name = self._get_bucket_name(**kw)
         return "http://%s.%s/%s" % (bucket_name,
                                     self.connection.server,
-                                    filename)
+                                    self._get_key(filename))

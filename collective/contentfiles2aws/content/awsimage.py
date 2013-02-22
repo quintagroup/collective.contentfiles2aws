@@ -16,6 +16,7 @@ from Products.validation.validators.SupplValidators import MaxSizeValidator
 from Products.validation import V_REQUIRED
 
 from collective.contentfiles2aws.config import PROJECTNAME
+from collective.contentfiles2aws.storage import AWSStorage
 from collective.contentfiles2aws.fields import AWSImageField
 from collective.contentfiles2aws.widgets import AWSImageWidget
 from collective.contentfiles2aws.content.interfaces import IAWSImage
@@ -30,6 +31,7 @@ AWSImageSchema = ATContentTypeSchema.copy() + Schema((
                   required=True,
                   primary=True,
                   languageIndependent=True,
+                  storage = AWSStorage(),
                   swallowResizeExceptions = zconf.swallowImageResizeExceptions.enable,
                   pil_quality = zconf.pil_config.quality,
                   pil_resize_algo = zconf.pil_config.resize_algo,

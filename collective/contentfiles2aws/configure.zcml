@@ -9,5 +9,8 @@
   <include file="profiles.zcml"/>
   <include file="skins.zcml"/>
   <include file="subscribers.zcml"/>
+  <include package=".browser"/>
+  <include file="catalog.zcml"/>
+  <include file="upgrades.zcml"/>
 
 </configure>
