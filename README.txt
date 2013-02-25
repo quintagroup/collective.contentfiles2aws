@@ -119,6 +119,7 @@ the following steps:
    turn 'USE_AWS' checkbox on all newly created objects with aws file or image
    fields will store their values to amazon storage.
 
+
 Custom content type
 -------------------
 
@@ -157,7 +158,35 @@ Here is exmaple of simple aws image field::
 
 
 Migration
--------------
+---------
+
+In case you have a lot of images and files in your site and you want to
+move them all to amazon storage there is simple migration procedure that you
+can use. Migration script (zope 3 view) named 'migrate-content' can be called
+on any context. If you call 'migrate-content' view you will see the list of
+of content types that have at least one aws field (image or file) in their 
+schema. (If your content types isn't in that list, it means that you do not
+use aws fields in it or use default Image and File fields instead aws ones.)
+Against of content types list you will see count of object for each content
+type founded on this context. To migrate object for specific content type
+you need to pass 'content_type' parameter for 'migrate-content' script.
+For example if you want to migrate Image content type you need to specify it
+like this:
+     http://yourdomain/somefolder/migrate-content?content_type=Image
+In case you want to migrate all objects for all content types that was founded
+on current context you need to specify 'all' value for content_type parameter,
+like this:
+     http://yourdomain/somefolder/migrate-content?content_type=all
+After script finish migration it will show list of migrated content types and
+count of fields migrated for each content type.
+
+Note: migration is time consuming procedure. It can take from a few minutes up
+to several hours, it depends on amount of files and images in your database.
+Be patient ... ;)
+
+
+
+
 
 Security and Backup
 ------------------
