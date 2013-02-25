@@ -198,14 +198,46 @@ fixed/corrected, all AWS files and images that were created in time when amazon
 was not accessible can easily be migrated to amazon. To migrate such object
 you neet to click on edit action, on the edit form, under the image or file
 you will see info box that infomrs you that this image or file currently saved
-in database. After you click save button regardless you make any changes or not
-system will try to migrate image or file to amazon, and if migration will be
-sucessfull info box will desapear from edit form.
+in database. After you click save button, regardless you make any changes or
+not system will try to migrate image or file to amazon, and if migration will
+be sucessfull, info box will desapear from edit form.
+
+
+Url generation
+--------------
+AWSImagField and AWSFileField have widgets that generates proper url
+to the image or file. Depending on place where data is stored url will
+point to amazon or your site. In case you decide to don't use widget you
+can use 'aws_image_url' and 'aws_file_url' helper views for image and file
+url generation accordingly. Here is example of file url heler view usage::
+
+    >>> from zope.component import getMultiAdapter
+    >>> aws_file_url = \
+    ...    getMultiAdapter((context, request), name=u'aws_file_url')
+    >>> aws_file_url(instance, name='fieldname', brain=False)
+
+ instance - is content object or brain;
+ name     - field name;
+ brain    - boolean flag that need to be set to False if instance is object
+             not brain. (True - by default)
+
+For image url helper view usage::
+
+    >>> from zope.component import getMultiAdapter
+    >>> aws_image_url = \
+    ...    getMultiAdapter((context, request), name=u'aws_image_url')
+    >>> aws_image_url(instance, name='fieldname',
+    ...               scale='scale_name', brain=False)
+
+ instance - is content object or brain;
+ name     - field name;
+ scale    - image scale (None - by default);
+ brain    - boolean flag that need to be set to False if instance is object
+             not brain. (True - by default);
 
 
 Security and Backup
 -------------------
-
 
 
 Credits
