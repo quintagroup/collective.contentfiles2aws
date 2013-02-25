@@ -167,7 +167,7 @@ on any context. If you call 'migrate-content' view you will see the list of
 of content types that have at least one aws field (image or file) in their 
 schema. (If your content types isn't in that list, it means that you do not
 use aws fields in it or use default Image and File fields instead aws ones.)
-Against of content types list you will see count of object for each content
+Next to content types list you will see count of object for each content
 type founded on this context. To migrate object for specific content type
 you need to pass 'content_type' parameter for 'migrate-content' script.
 For example if you want to migrate Image content type you need to specify it
@@ -185,11 +185,26 @@ to several hours, it depends on amount of files and images in your database.
 Be patient ... ;)
 
 
+Safety
+-------
 
+After you installed, configured and turned aws storage on, all files and images
+will be stored into amazon s3 storage. It means that during object creation
+file data will be send to remote server. In case remote server isn't accessible
+for some reasons (bad configuration provided or some problems on server side)
+your data will not be lost, it will be saved in site database like it would be
+if you will use default Image or File instead AWS one. After all issues were
+fixed/corrected, all AWS files and images that were created in time when amazon
+was not accessible can easily be migrated to amazon. To migrate such object
+you neet to click on edit action, on the edit form, under the image or file
+you will see info box that infomrs you that this image or file currently saved
+in database. After you click save button regardless you make any changes or not
+system will try to migrate image or file to amazon, and if migration will be
+sucessfull info box will desapear from edit form.
 
 
 Security and Backup
-------------------
+-------------------
 
 
 
