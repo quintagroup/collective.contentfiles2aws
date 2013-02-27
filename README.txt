@@ -236,10 +236,6 @@ For image url helper view usage::
              not brain. (True - by default);
 
 
-Security and Backup
--------------------
-
-
 Credits
 =======
 
