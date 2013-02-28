@@ -1,3 +1,5 @@
+from cgi import escape
+
 from OFS.Image import File
 from AccessControl import ClassSecurityInfo
 from AccessControl.Permissions import view as View
@@ -47,3 +49,49 @@ class AWSFile(File):
         as3client = aws_utility.getFileClient()
         if self.source_id:
             as3client.delete(self.source_id)
+
+    security.declareProtected(View, 'tag')
+    def tag(self, height=None, width=None, alt=None,
+            scale=0, xscale=0, yscale=0, css_class=None, title=None, **args):
+
+        if not (self.height or self.width):
+            # this is file not image
+            return ''
+
+        if height is None: height=self.height
+        if width is None:  width=self.width
+
+        # Auto-scaling support
+        xdelta = xscale or scale
+        ydelta = yscale or scale
+
+        if xdelta and width:
+            width =  str(int(round(int(width) * xdelta)))
+        if ydelta and height:
+            height = str(int(round(int(height) * ydelta)))
+
+        result='<img src="%s"' % (self.absolute_url())
+
+        if alt is None:
+            alt=getattr(self, 'alt', '')
+        result = '%s alt="%s"' % (result, escape(alt, 1))
+
+        if title is None:
+            title=getattr(self, 'title', '')
+        result = '%s title="%s"' % (result, escape(title, 1))
+
+        if height:
+            result = '%s height="%s"' % (result, height)
+
+        if width:
+            result = '%s width="%s"' % (result, width)
+
+        if css_class is not None:
+            result = '%s class="%s"' % (result, css_class)
+
+        for key in args.keys():
+            value = args.get(key)
+            if value:
+                result = '%s %s="%s"' % (result, key, value)
+
+        return '%s />' % result
