@@ -3,6 +3,7 @@ from md5 import md5
 from random import random
 from os.path import splitext
 
+from Acquisition import aq_base
 from OFS.Image import File, Image
 from AccessControl import ClassSecurityInfo
 
@@ -10,6 +11,7 @@ from zope.component import getUtility
 
 from Products.CMFPlone.utils import safe_unicode
 from Products.statusmessages.interfaces import IStatusMessage
+from Products.Archetypes.Storage import _marker
 from Products.Archetypes.Storage.annotation import AnnotationStorage
 from Products.Archetypes.interfaces import IReferenceable
 from plone.i18n.normalizer.interfaces import IIDNormalizer
@@ -90,6 +92,19 @@ class AWSStorage(AnnotationStorage):
         except (FileClientRemoveError, FileClientStoreError):
             # notify user???
             return file_
+
+    def _migration(self, name, instance, **kwargs):
+        """Migrates data from the original storage
+
+        """
+        value = getattr(aq_base(instance), name, _marker)
+        if value is _marker:
+                raise AttributeError(name)
+        delattr(instance, name)
+
+        # we use set method from base class to prevent migration to aws
+        AnnotationStorage.set(self, name, instance, value, **kwargs)
+        return value
 
     security.declarePrivate('get')
     def get(self, name, instance, **kwargs):
