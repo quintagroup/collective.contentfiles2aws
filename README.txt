@@ -1,227 +1,242 @@
 Introduction
 ============
 
-This package brings to Plone the ability to store files and images on
-amazon s3 service.
+With the collective.contentfiles2aws package, you can store Plone files
+and images on amazon s3 service.
+
 
 Overview
 --------
 
-The main idea is to move content images and files to amazon
-CDN which serves content to end users with high availability and high
-performance. The package contains two content types: AWSFile and AWSImage
-which work similar to the default ones. The main difference is that they
-store their content on amazon simple storage instead of Plone site.
-Also package contains patch for default content types like Image, File and
-News Item.
+The main purpose of the package to move content images and files to amazon
+CDN, that allows to serve content to end users with high performance and
+high availability. The package contains two content types: AWSFile and AWSImage
+which work similar to the default Plone ones. The main difference is that they
+store their content on amazon simple storage instead of a Plone site.
+Also, the package contains a patch for default content types like Image, File,
+and News Item.
 
 
 Compatibility
 -------------
 
-This add-on was tested for the Plone 3.3.5.
+The package was tested on Plone 3.3.5.
+
 
 Requirements
 ------------
 
-This package requires boto library (http://github.com/boto/boto)
-that is compatible with python 2.4
+The package requires boto library (http://github.com/boto/boto)
+that is compatible with python 2.4.
 
 This package was developed and tested with @1011 revision
-of boto library. From manual checkout use this command::
+of boto library. For manual checkout, use this command::
 
-  svn co http://boto.googlecode.com/svn/trunk@1011
+ svn co http://boto.googlecode.com/svn/trunk@1011
 
 
 Installation
 ------------
 
-* to add the package to your Zope instance, please, follow the instructions
-  found inside the
-  ``docs/INSTALL.txt`` file
+To add the package to your Zope instance, do the following:
 
-* then restart your Zope instance and install the
-  ``collective.contentfiles2aws`` package from within the
-  ``portal_quickinstaller`` tool.
+1. Follow the instructions provided in the ``docs/INSTALL.txt`` file.
+2. Restart your Zope instance.
+3. Install the ``collective.contentfiles2aws`` package with Quickinstaller in
+   Plone (Site Setup > Add/Remove Products).
 
-After package is sucessfully installed it should be properly configured.
-You need to create amazon account before you can configure package.
+After the package is installed, it should be configured properly. For this,
+you need to have an amazon account.
+
 
 Amazon S3 bucket
 ----------------
-Every file you upload to Amazon S3 is stored in a container called a bucket.
-Before you start working with Amazon S3 you have to create at least one bucket.
-The bucket namespace is shared by all users of the system; therefore each
-bucket name should be unique. You can create up to 100 buckets per account.
-Each bucket can contain an unlimited number of files. Buckets cannot be nested,
-you can not create a bucket within a bucket. Bucket ownership is not
-transferable; however, if a bucket is empty, you can delete it. After a bucket
-is deleted, the name becomes available to reuse, however the name might not be
-available for you to resuse for various reasons. For example, some other
-account can create a bucket with that name. So if you want to use the same
-bucket name, don't delete the bucket. Note that it might take some timeframe
-before the name can be reused.
-  There is no limit to the number of objects that can be stored in a bucket
-and no variation in performance whether you use many buckets or just a few.
+
+Every file that you upload to Amazon S3 is stored in a container called
+a bucket. Before you start working with Amazon S3, you must create at least
+one bucket. The bucket namespace is shared by all users of the system;
+therefore, name of each bucket should be unique. You can create up to 100
+buckets per account. Each bucket can contain an unlimited number of files.
+Buckets cannot be nested: you cannot create a bucket within a bucket.
+Bucket ownership is not transferable; however, if a bucket is empty,
+you can delete it. After a bucket is deleted, the name becomes available for
+reuse. However, the name might be unavailable for reuse because of various
+reasons, for example, a bucket with the same name can be created by another
+account. So, if you want to use the same bucket name, don't delete the bucket.
+Note that it might take some time before the name can be reused.
+
+There is no limit to the number of objects that can be stored in a bucket.
+Performance is not impacted by the number of buckets that you use.
 You can store all of your objects in a single bucket, or you can organize them
 across several buckets.
 
+
 Rules for Bucket Naming
 -----------------------
-In all regions except for the US Standard region a bucket name mustcomply
-with the following rules. These result in a DNS compliant bucket name.
- * Bucket names must be at least 3 and no more than 63 characters long
- * Bucket name must be a series of one or more labels separated
- by a period (.), where each label:
- * Must start with a lowercase letter or a number
- * Must end with a lowercase letter or a number
- * Can contain lowercase letters, numbers and dashes
- * Bucket names must not be formatted as an IP address (e.g., 192.168.5.4)
 
- The following are examples of valid bucket names:
-   *myawsbucket
-   *my.aws.bucket
-   *myawsbucket.1
+In all regions except for the US Standard region, a bucket name must comply
+with the following rules (as a result of a DNS compliant bucket name):
+* Bucket name must be at least 3 and no more than 63 characters long
+* Bucket name must be a series of one or more labels separated
+by a period (.), where each label:
+    * Must start with a lowercase letter or a number
+    * Must end with a lowercase letter or a number
+    * Can contain lowercase letters, numbers, and dashes
+    * Bucket names must not be formatted as IP addresses (e.g., 192.168.5.4)
+
+The following are examples of valid bucket names:
+  *myawsbucket
+  *my.aws.bucket
+  *myawsbucket.1
 
 These naming rules for US Standard region can result in a bucket name that
-is not DNS-compliant. For example, MyAWSBucket, is a valid bucket name, with
+is not DNS compliant. For example, MyAWSBucket – is a valid bucket name with
 uppercase letters in its name. If you try to access this bucket using a virtual
 hosted-style request, http://MyAWSBucket.s3.amazonaws.com/yourobject,
 the URL resolves to the bucket myawsbucket and not the bucket MyAWSBucket.
-In response, Amazon S3 will return a bucket not found error.
-To avoid this problem, we recommend as a best practice that you
-always DNS-compliant bucket names regardless of the region in which you
-create the bucket. For more information about virtual-hosted style access to
-your buckets, see Virtual Hosting of Buckets.
+In response, Amazon S3 will return a not found error.
+To avoid this problem, we recommend that you always use DNS-compliant bucket
+names regardless of the region in which you create the bucket.
+
 
 Configuration
 -------------
-To configure package to work with you amazon account you need to accomplish
-the following steps:
- * find 'portal_properties' tool in your site root and open it;
- * find 'contentfiles2aws' property scheet and click on it;
- * fill in your aws key id into AWS_KEY_ID field;
- * fill in your aws secret key into AWS_SEECRET_KEY field;
- * fill in created bucket name into AWS_BUCKET_NAME field;
- * optionally you can fill in AWS_FILENAME_PREFIX with the name of a folder
-   in bucket. This folder will be used to store your files. Also you can
-   provide slash separated path, for example: folder1/folder2/folder3
-   Actually there are no folders in s3, only key/value pairs. The key can
-   contain slashes ("/") and that will make it appear as a folder in management
-   console, but programmatically it's not a folder it is a string value.
-   Anyway if you prefer to use folder you can specify one in
-   AWS_FILENAME_PREFIX field
- * turn on 'USE_AWS' checkbox on. This checkbox allows you to turn on or
-   turn off amazon storage. If 'USE_AWS' checkbox is turned off that means
-   that all newly created content types that use aws file or image fields will
-   work like default ones and store their values in database. Objects that were
-   created before you turned off 'USE_AWS' check box will work as usual. If you
-   turn 'USE_AWS' checkbox on all newly created objects with aws file or image
-   fields will store their values to amazon storage.
+
+To configure the collective.contentfiles2aws package to work with you amazon
+account, you need to accomplish the following steps:
+
+1. In your site root, open the 'portal_properties' tool
+2. Find 'contentfiles2aws' property sheet and click it
+3. In the AWS_KEY_ID field, enter your aws key id
+4. In the AWS_SEECRET_KEY field, enter your aws secret key
+5. In the AWS_BUCKET_NAME field, enter the name of the created bucket
+6. (optional) In the AWS_FILENAME_PREFIX field, enter the name of a folder
+   in bucket. This folder will be used to store your files. Also, you can
+   provide slash separated path, for example: folder1/folder2/folder3.
+   Actually, there are no folders in Amazon S3, only key/value pairs. The key
+   can contain slashes ("/") and that will make it appear as a folder in
+   management console, but programmatically it's not a folder, it is a string
+   value.  Anyway, if you prefer using folder, you can specify one in the
+   AWS_FILENAME_PREFIX field.
+7. Select the USE_AWS check box.
+   This check box allows you to turn on or turn off amazon storage.
+   If 'USE_AWS' check box is not selected, that means that all newly created
+   content types that use aws file or image fields will work like default ones,
+   and will store their values in the database. Objects that were created
+   before you remove selection from  the USE_AWS check box will work as usual.
+   If you select the USE_AWS check box, all newly created objects with aws file
+   or image fields will store their values to amazon storage.
 
 
 Custom content type
 -------------------
 
-If you want to have ability to store images or files to aws storage in your
-custom content type you need to do the following steps:
-  * use AWSImageField or AWSFileField instead default ImageField or File field
-    in your content type schema.
-  * use AWSImageWidget and AWSFieldWidget for AWSImageField and AWSFileField
-    accordingly.
-  * use AWSStorage instead AnnotationStorage for AWSImageField or AWSFileField.
+If you want to store images or files to aws storage in your custom content
+type, you need to do the following steps:
 
-Here is exmaple of simple aws image field::
+ 1. Use AWSImageField or AWSFileField instead default ImageField or File field
+    in your content type schema.
+ 2. Use AWSImageWidget and AWSFieldWidget for AWSImageField and AWSFileField
+    accordingly.
+ 3. Use AWSStorage instead of AnnotationStorage for AWSImageField or
+    AWSFileField.
+
+Here is example of simple aws image field::
 
     `AWSImageField`('image',
-                  required=True,
-                  primary=True,
-                  languageIndependent=True,
-                  storage = `AWSStorage()`,
-                  pil_quality = zconf.pil_config.quality,
-                  pil_resize_algo = zconf.pil_config.resize_algo,
-                  max_size = zconf.ATImage.max_image_dimension,
-                  sizes= {'large'   : (768, 768),
-                          'preview' : (400, 400),
-                          'mini'    : (200, 200),
-                          'thumb'   : (128, 128),
-                          'tile'    :  (64, 64),
-                          'icon'    :  (32, 32),
-                          'listing' :  (16, 16),
-                         },
-                  validators = (('isNonEmptyFile', V_REQUIRED),
-                                ('checkImageMaxSize', V_REQUIRED)),
-                  widget = `AWSImageWidget`(
-                           description = '',
-                           label= _(u'label_image', default=u'Image'),
-                           show_content_type = False,)),
+                 required=True,
+                 primary=True,
+                 languageIndependent=True,
+                 storage = `AWSStorage()`,
+                 pil_quality = zconf.pil_config.quality,
+                 pil_resize_algo = zconf.pil_config.resize_algo,
+                 max_size = zconf.ATImage.max_image_dimension,
+                 sizes= {'large'   : (768, 768),
+                         'preview' : (400, 400),
+                         'mini'    : (200, 200),
+                         'thumb'   : (128, 128),
+                         'tile'    :  (64, 64),
+                         'icon'    :  (32, 32),
+                         'listing' :  (16, 16),
+                        },
+                 validators = (('isNonEmptyFile', V_REQUIRED),
+                               ('checkImageMaxSize', V_REQUIRED)),
+                 widget = `AWSImageWidget`(
+                          description = '',
+                          label= _(u'label_image', default=u'Image'),
+                          show_content_type = False,)),
 
 
 Migration
 ---------
 
-In case you have a lot of images and files in your site and you want to
-move them all to amazon storage there is simple migration procedure that you
-can use. Migration script (zope 3 view) named 'migrate-content' can be called
-on any context. If you call 'migrate-content' view you will see the list of
-of content types that have at least one aws field (image or file) in their 
-schema. (If your content types isn't in that list, it means that you do not
-use aws fields in it or use default Image and File fields instead aws ones.)
-Next to content types list you will see count of object for each content
-type founded on this context. To migrate object for specific content type
-you need to pass 'content_type' parameter for 'migrate-content' script.
-For example if you want to migrate Image content type you need to specify it
-like this:
-     http://yourdomain/somefolder/migrate-content?content_type=Image
-In case you want to migrate all objects for all content types that was founded
-on current context you need to specify 'all' value for content_type parameter,
-like this:
-     http://yourdomain/somefolder/migrate-content?content_type=all
-After script finish migration it will show list of migrated content types and
-count of fields migrated for each content type.
+If you have a lot of images and files on your site, and you want to
+move them all to amazon storage, there is a simple migration procedure that you
+can follow. Migration script (zope 3 view) named 'migrate-content' can be
+called on any context. If you call 'migrate-content' view, you will see a list
+of content types that have at least one aws field (image or file) in their
+schema. (If your content type is not in that list, it means that you do not
+use aws fields in it, or you use default Image and File fields instead of aws
+ones.) Next to the content types list, you will see the number of objects for
+each content type found on this context. To migrate object for specific content
+type, you need to pass 'content_type' parameter for 'migrate-content' script.
 
-Note: migration is time consuming procedure. It can take from a few minutes up
-to several hours, it depends on amount of files and images in your database.
-Be patient ... ;)
+For example, if you want to migrate Image content type, you need to specify it
+like this:
+    http://yourdomain/somefolder/migrate-content?content_type=Image
+
+If you want to migrate all objects for all content types that were found
+on the current context, you need to specify 'all' value for content_type
+parameter, like this:
+    http://yourdomain/somefolder/migrate-content?content_type=all
+
+After a script finishes the migration, it will show a list of migrated content
+types and number of migrated fields for each content type.
+
+Note: Migration is a time consuming procedure. It can take from a few minutes
+up to several hours, depending on the amount of files and images in your
+database.
 
 
 Safety
 -------
 
-After you installed, configured and turned aws storage on, all files and images
-will be stored into amazon s3 storage. It means that during object creation
-file data will be send to remote server. In case remote server isn't accessible
-for some reasons (bad configuration provided or some problems on server side)
-your data will not be lost, it will be saved in site database like it would be
-if you will use default Image or File instead AWS one. After all issues were
-fixed/corrected, all AWS files and images that were created in time when amazon
-was not accessible can easily be migrated to amazon. To migrate such object
-you neet to click on edit action, on the edit form, under the image or file
-you will see info box that infomrs you that this image or file currently saved
-in database. After you click save button, regardless you make any changes or
-not system will try to migrate image or file to amazon, and if migration will
-be sucessfull, info box will desapear from edit form.
+After you installed the package, configured it, and turned AWS storage on,
+all files and images will be stored in amazon s3 storage. It means that during
+object creation, file data will be send to a remote server. In case remote
+server is inaccessible for some reasons (bad configuration or issues on server
+side), your data will not be lost, it will be saved in site database,
+as if you were using a default Image or File instead of AWS one. After all
+issues were resolved, all AWS files and images that were created when amazon
+was not accessible, can easily be migrated to amazon. To migrate such objects,
+you need to click the edit action, and then, on the edit form, under the image
+or file you will see an info box saying that this image or file is currently
+saved in a database. After you click the Save button, regardless if you make
+any changes or not, the system will try to migrate image or file to amazon.
+If migration is successful, info box will disappear from the edit form.
 
 
 Url generation
 --------------
-AWSImagField and AWSFileField have widgets that generates proper url
-to the image or file. Depending on place where data is stored url will
-point to amazon or your site. In case you decide to don't use widget you
+
+AWSImagField and AWSFileField have widgets that generate proper URL
+to the image or file. Depending on the place where the data is stored, URL will
+point to amazon or your site. If you decide not to use the widget, you
 can use 'aws_image_url' and 'aws_file_url' helper views for image and file
-url generation accordingly. Here is example of file url heler view usage::
+URL generation accordingly. Here is an example of file URL helper view usage::
 
     >>> from zope.component import getMultiAdapter
     >>> aws_file_url = \
     ...    getMultiAdapter((context, request), name=u'aws_file_url')
     >>> aws_file_url(instance, name='fieldname', brain=False)
 
- instance - is content object or brain;
- name     - field name;
- brain    - boolean flag that need to be set to False if instance is object
-             not brain. (True - by default)
+where:
+ * instance - is content object or brain;
+ * name     - field name;
+ * brain    - boolean flag that need to be set to False if instance is object
+              not brain. (True - by default)
 
-For image url helper view usage::
+For image URL helper view usage::
 
     >>> from zope.component import getMultiAdapter
     >>> aws_image_url = \
@@ -229,10 +244,11 @@ For image url helper view usage::
     >>> aws_image_url(instance, name='fieldname',
     ...               scale='scale_name', brain=False)
 
- instance - is content object or brain;
- name     - field name;
- scale    - image scale (None - by default);
- brain    - boolean flag that need to be set to False if instance is object
+where:
+ * instance - is content object or brain;
+ * name - field name;
+ * scale - image scale (None - by default);
+ * brain - boolean flag that need to be set to False if instance is object
              not brain. (True - by default);
 
 
@@ -248,7 +264,7 @@ Companies
 * `Contact us <mailto:python@martinschoel.com>`_
 
 
-Authors
+Author
 -------
 
 * Taras Melnychuk <melnychuktaras@gmail.com>
