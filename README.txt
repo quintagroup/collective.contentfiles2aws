@@ -76,18 +76,19 @@ Rules for Bucket Naming
 
 In all regions except for the US Standard region, a bucket name must comply
 with the following rules (as a result of a DNS compliant bucket name):
-* Bucket name must be at least 3 and no more than 63 characters long
-* Bucket name must be a series of one or more labels separated
-by a period (.), where each label:
-    * Must start with a lowercase letter or a number
-    * Must end with a lowercase letter or a number
-    * Can contain lowercase letters, numbers, and dashes
-    * Bucket names must not be formatted as IP addresses (e.g., 192.168.5.4)
+
+ * Bucket name must be at least 3 and no more than 63 characters long
+ * Bucket name must be a series of one or more labels separated
+   by a period (.), where each label:
+ * Must start with a lowercase letter or a number
+ * Must end with a lowercase letter or a number
+ * Can contain lowercase letters, numbers, and dashes
+ * Bucket names must not be formatted as IP addresses (e.g., 192.168.5.4)
 
 The following are examples of valid bucket names:
-  *myawsbucket
-  *my.aws.bucket
-  *myawsbucket.1
+ * myawsbucket
+ * my.aws.bucket
+ * myawsbucket.1
 
 These naming rules for US Standard region can result in a bucket name that
 is not DNS compliant. For example, MyAWSBucket – is a valid bucket name with
@@ -182,12 +183,14 @@ each content type found on this context. To migrate object for specific content
 type, you need to pass 'content_type' parameter for 'migrate-content' script.
 
 For example, if you want to migrate Image content type, you need to specify it
-like this:
+like this::
+
     http://yourdomain/somefolder/migrate-content?content_type=Image
 
 If you want to migrate all objects for all content types that were found
 on the current context, you need to specify 'all' value for content_type
-parameter, like this:
+parameter, like this::
+
     http://yourdomain/somefolder/migrate-content?content_type=all
 
 After a script finishes the migration, it will show a list of migrated content
