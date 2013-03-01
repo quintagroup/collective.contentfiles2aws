@@ -1,7 +1,47 @@
 Changelog
 =========
 
-1.0dev (unreleased)
+1.0 - March 1, 2013
 -------------------
+
+ - Fixed storage get method
+
+ - Fixed image url generation for scales.
+
+ - Made migration script more flexible.
+
+ - Fixed patch, patch news item content type.
+
+ - Fixed image object url generation
+
+ - Added upgrade step for new version of package
+
+ - Set proper width and height attributes during migration
+
+ - Fixed bug with image width and height attributes.
+
+ - Update catalog metadata for objects during migration script
+
+ - Added url generator utility for objects and brains.
+
+ - Added migration script
+
+ - Added filename prefix for aws files
+
+ - Clean up aws widgets
+
+ - Improved test for aws storage.
+
+ - Fixed aws image and file properties installation
+
+ - Clean up code for aws image and file fields.
+
+ - Fixed transaction abort during remote source remove.
+
+ - Implmented aws storage as archetypes field storage
+
+
+1.0dev - February 1, 2013
+-------------------------
 
 - Initial release
