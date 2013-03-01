@@ -91,7 +91,7 @@ The following are examples of valid bucket names:
  * myawsbucket.1
 
 These naming rules for US Standard region can result in a bucket name that
-is not DNS compliant. For example, MyAWSBucket – is a valid bucket name with
+is not DNS compliant. For example, MyAWSBucket - is a valid bucket name with
 uppercase letters in its name. If you try to access this bucket using a virtual
 hosted-style request, http://MyAWSBucket.s3.amazonaws.com/yourobject,
 the URL resolves to the bucket myawsbucket and not the bucket MyAWSBucket.
