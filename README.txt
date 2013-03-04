@@ -255,6 +255,32 @@ where:
              not brain. (True - by default);
 
 
+AWS file naming
+---------------
+
+Each file and image that is stored into amazon bucket has unique name that is
+generated from following parts:
+
+ * content object UID;
+ * generated part
+ * field name
+ * scale name (for images)
+ * filename
+
+For example::
+
+                               Generated part   Scale name
+                                   |-----|       |---|
+  003d34b5ba832f753ad91a6cdac1921f_537fd44_image_large_tanning-bed.jpg
+  |------------------------------|         |---|       |-------------|
+          Object UID                    Field name       File name
+
+
+TODO
+====
+ [] Add transformation for images and files inserted by kupu.
+
+
 Credits
 =======
 
