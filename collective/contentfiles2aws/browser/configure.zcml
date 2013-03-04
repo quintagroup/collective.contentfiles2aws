@@ -4,7 +4,7 @@
     xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="collective.contentfiles2aws">
 
-  <browser:view
+  <browser:page
       for="*"
       name="migrate-content"
       class=".content_migration.ContentMigrationView"
