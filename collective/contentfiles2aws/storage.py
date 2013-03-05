@@ -32,9 +32,10 @@ class AWSStorage(AnnotationStorage):
         return md5(data).hexdigest()[-7:]
 
     def getNormalizedName(self, filename):
-        normalizer = getUtility(IIDNormalizer)
-        return ".".join([normalizer.normalize(safe_unicode(n))
-                         for n in splitext(filename)])
+        if filename:
+            normalizer = getUtility(IIDNormalizer)
+            return ".".join([normalizer.normalize(safe_unicode(n))
+                            for n in splitext(filename)])
 
     def getSourceId(self, name, filename, instance, fresh=False):
         sid = ''
