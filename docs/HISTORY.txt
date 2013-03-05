@@ -4,6 +4,9 @@ Changelog
 1.1 - Unreleased
 ----------------
 
+ - Fixed filename normalization.
+   [Taras Melnychuk]
+
  - Fixed permission issue for migration view.
    [Taras Melnychuk]
 
