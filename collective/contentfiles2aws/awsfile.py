@@ -7,6 +7,7 @@ from AccessControl.Permissions import view as View
 from zope.component import getUtility
 
 from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
+from collective.contentfiles2aws.client.fsclient import FileClientRetrieveError
 
 
 class AWSFile(File):
@@ -27,6 +28,36 @@ class AWSFile(File):
         self.filename = filename
         self.content_type = content_type
         self.source_id = None
+
+    def get_data(self):
+        """ Retreives source from object.
+
+        First of all method looks into object 'data' attribute and if
+        it is not empty return the value. If 'data' attribute is
+        empty method will try to load data from Amazon storage.
+
+        """
+
+        if 'data' in self.__dict__ and self.__dict__['data']:
+            return self.__dict__['data']
+
+        aws_utility = getUtility(IAWSFileClientUtility)
+        as3client = aws_utility.getFileClient()
+        if self.source_id:
+            try:
+                return as3client.get(self.source_id)
+            except FileClientRetrieveError:
+                return ''
+
+    def set_data(self, value):
+        """ Temporary set file data to 'data' attribute.
+
+        AWS storage will migrate data to Amazon and clean up
+        'data' on save action.
+        """
+        self.__dict__['data'] = value
+
+    data = property(get_data, set_data)
 
     security.declareProtected(View, 'index_html')
     def index_html(self, REQUEST, RESPONSE):
