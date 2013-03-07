@@ -270,15 +270,24 @@ class MockConnection(object):
                  path=NOT_IMPL, provider=NOT_IMPL,
                  bucket_class=NOT_IMPL):
 
-        if aws_access_key_id and 'bad' in aws_access_key_id.lower() or \
-           aws_secret_access_key and 'bad' in aws_secret_access_key.lower():
-            raise S3ResponseError('500', 'Bad credentials.')
-
         self.buckets = STORAGE_DATA
         self.server = 's3.amazonaws.com'
 
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+
+    def _check_credentials(self):
+        if self.aws_access_key_id and \
+                'bad' in self.aws_access_key_id.lower() or \
+                self.aws_secret_access_key and \
+                'bad' in self.aws_secret_access_key.lower():
+            raise S3ResponseError(403, "Forbidden",
+                "<Message>The AWS Access credentials you provided does "
+                "not exist in our records.d bad credentials </Message>")
+
     def create_bucket(self, bucket_name, headers=NOT_IMPL, location=NOT_IMPL,
                       policy=NOT_IMPL):
+        self._check_credentials()
         if bucket_name in self.buckets:
             raise boto.exception.StorageCreateError(
                 409, 'BucketAlreadyOwnedByYou',
@@ -289,17 +298,20 @@ class MockConnection(object):
         return mock_bucket
 
     def delete_bucket(self, bucket, headers=NOT_IMPL):
+        self._check_credentials()
         if bucket not in self.buckets:
             raise S3ResponseError(
                 404, 'NoSuchBucket', '<Message>no such bucket</Message>')
         del self.buckets[bucket]
 
     def get_bucket(self, bucket_name, validate=NOT_IMPL, headers=NOT_IMPL):
+        self._check_credentials()
         if bucket_name not in self.buckets:
             raise S3ResponseError(404, 'NoSuchBucket', 'Not Found')
         return self.buckets[bucket_name]
 
     def get_all_buckets(self, headers=NOT_IMPL):
+        self._check_credentials()
         return self.buckets.itervalues()
 
 
