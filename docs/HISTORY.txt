@@ -4,6 +4,16 @@ Changelog
 1.1 - Unreleased
 ----------------
 
+ - Improved source update in case there is problems with
+   access to Aamazon S3 service.
+   [Taras Melnychuk]
+
+ - Added data property to be able to retreive source.
+   [Taras Melnychuk]
+
+ - Fixed filename normalization.
+   [Taras Melnychuk]
+
  - Fixed filename normalization.
    [Taras Melnychuk]
 
