@@ -173,8 +173,21 @@ class AWSStorage(AnnotationStorage):
                         u"Couldn't update %s file to storage. %s" %
                         (safe_unicode(filename),
                          safe_unicode(e.message)), type='error')
+                    if isinstance(value, AWSFile):
+                        # use default OFS.Image or OFS.File
+                        if width and height:
+                            # we have image
+                            value = Image(value.id(), '', str(value.data),
+                                          content_type=content_type)
+                        else:
+                            value = File(value.id(), '', str(value.data),
+                                         content_type=content_type)
+                        setattr(value, 'filename', filename)
                     AnnotationStorage.set(self, name, instance,
                                           value, **kwargs)
+                else:
+                    # clean up data after update
+                    setattr(file_, 'data', '')
             else:
                 try:
                     file_ = self._do_migrate(file_, instance,
