@@ -4,6 +4,9 @@ Changelog
 1.1 - Unreleased
 ----------------
 
+ - Added copy support.
+   [Taras Melnychuk]
+
  - Improved source update in case there is problems with
    access to Aamazon S3 service.
    [Taras Melnychuk]
