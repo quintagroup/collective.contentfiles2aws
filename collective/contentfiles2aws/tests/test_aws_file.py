@@ -4,6 +4,8 @@ import unittest2
 from OFS.Image import File
 from Products.CMFCore.utils import getToolByName
 
+from plone.app.testing import setRoles, TEST_USER_ID
+
 from collective.contentfiles2aws.awsfile import AWSFile
 from collective.contentfiles2aws.testing import \
     AWS_CONTENT_FILES_INTEGRATION_TESTING
@@ -97,6 +99,32 @@ class AWSFileTestCase(unittest2.TestCase):
         value = aws_file.getField('file').get(aws_file)
         self.assert_(isinstance(value, File))
         self.assert_(value.data)
+
+    def test_AWSFileCopy(self):
+        self.conf_sheet._updateProperty('AWS_BUCKET_NAME', 'contentfiles')
+        self.conf_sheet._updateProperty('USE_AWS', True)
+
+        fid = self.portal.invokeFactory('AWSFile', 'aws_file')
+        aws_file = getattr(self.portal, fid)
+        aws_file.update(file=self._get_image())
+
+        cp = self.portal.manage_copyObjects(ids=['aws_file'])
+
+        setRoles(self.portal, TEST_USER_ID, ["Manager"])
+        self.portal.manage_pasteObjects(cb_copy_data=cp)
+
+        original_source_id = aws_file.getField('file').get(aws_file).source_id
+
+        aws_file_copy = getattr(self.portal, 'copy_of_aws_file')
+        copy_source_id = \
+                aws_file_copy.getField('file').get(aws_file_copy).source_id
+
+        self.assertNotEqual(original_source_id, copy_source_id)
+
+        # check that after original file remove we still have data in
+        # cloned object.
+        self.portal.manage_delObjects(ids=['aws_file'])
+        self.assert_(aws_file_copy.getField('file').get(aws_file_copy).data)
 
 
 def test_suite():

@@ -20,6 +20,10 @@ class FileClientRemoveError(FileClientError):
     """ Base Remove Error Exception """
     pass
 
+class FileClientCopyError(FileClientError):
+    """ Base Copy Error Exception """
+    pass
+
 
 class FSFileClient(object):
     pass

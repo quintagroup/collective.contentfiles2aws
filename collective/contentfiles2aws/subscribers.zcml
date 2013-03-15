@@ -13,4 +13,10 @@
       handler="collective.contentfiles2aws.handlers.abort_remove"
       />
 
+  <subscriber
+      for="Products.ATContentTypes.interface.interfaces.IATContentType
+           OFS.interfaces.IObjectClonedEvent"
+      handler="collective.contentfiles2aws.handlers.object_cloned"
+      />
+
 </configure>

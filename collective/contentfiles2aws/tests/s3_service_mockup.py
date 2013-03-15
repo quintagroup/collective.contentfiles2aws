@@ -131,6 +131,10 @@ class MockKey(object):
         hex_md5 = m.hexdigest()
         self.etag = hex_md5
 
+    def get_acl(self):
+        if self.bucket != None:
+            return self.bucket.get_acl(self.name)
+
     def set_acl(self, acl_str):
         if self.bucket != None:
             self.bucket.set_acl(acl_str, self.name)
