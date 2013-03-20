@@ -7,4 +7,4 @@ ADD_PERMISSIONS = {
 }
 
 SKIP_SOURCE_REMOVE_FLAG = 'collective.contentfiles2aws.skip_aws_source_remove'
-ABORT_TRANSACTION_FLAG = 'collective.contentfiles2aws.skip_aws_source_remove'
+ABORT_TRANSACTION_FLAG = 'collective.contentfiles2aws.abort_transaction'
