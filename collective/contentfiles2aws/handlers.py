@@ -110,6 +110,8 @@ def object_cloned(obj, event):
     def cleanup(obj):
         catalog = getToolByName(obj, 'portal_catalog')
         container = aq_parent(aq_inner(obj))
+        # we have to skip source remove to be able to remove object.
+        utils.skip_source_remove(obj.REQUEST)
         container.manage_delObjects(ids=[obj.getId()])
         catalog.uncatalog_object('/'.join(obj.getPhysicalPath()))
         for brain in catalog(path={'depth': 1,
@@ -121,5 +123,8 @@ def object_cloned(obj, event):
         clone_source(obj)
     except AWSSourceCopyError, e:
         cleanup(obj)
+        if aq_parent(aq_inner(obj)) is event.object:
+            # clean up parent object
+            cleanup(event.object)
         IStatusMessage(request).addStatusMessage(_(e), type='error')
         request.RESPONSE.redirect(request.get('HTTP_REFERER'))
