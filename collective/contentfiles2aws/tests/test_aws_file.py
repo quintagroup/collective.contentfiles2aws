@@ -3,6 +3,7 @@ import unittest2
 
 from OFS.Image import File
 from Products.CMFCore.utils import getToolByName
+from Products.statusmessages.interfaces import IStatusMessage
 
 from plone.app.testing import setRoles, TEST_USER_ID
 
@@ -112,6 +113,7 @@ class AWSFileTestCase(unittest2.TestCase):
 
         setRoles(self.portal, TEST_USER_ID, ["Manager"])
         self.portal.manage_pasteObjects(cb_copy_data=cp)
+        setRoles(self.portal, TEST_USER_ID, ["Member"])
 
         original_source_id = aws_file.getField('file').get(aws_file).source_id
 
@@ -125,6 +127,65 @@ class AWSFileTestCase(unittest2.TestCase):
         # cloned object.
         self.portal.manage_delObjects(ids=['aws_file'])
         self.assert_(aws_file_copy.getField('file').get(aws_file_copy).data)
+
+        # check file copy handler when 'aws storage' is turned off.
+        self.conf_sheet._updateProperty('USE_AWS', False)
+
+        # lets make new copy from previous one.
+        cp = self.portal.manage_copyObjects(ids=['copy_of_aws_file'])
+
+        setRoles(self.portal, TEST_USER_ID, ["Manager"])
+        self.portal.manage_pasteObjects(cb_copy_data=cp)
+        setRoles(self.portal, TEST_USER_ID, ["Member"])
+
+        # ensure that copy object was successfuly removed.
+        self.assert_('copy_2_of_aws_file' not in self.portal.objectIds())
+
+        messages = IStatusMessage(self.layer['request']).showStatusMessages()
+        error_message = ('Could not copy remote source. To be able to copy '
+                        'object properly, please activate AWS storage')
+        self.assert_(error_message in [m.message for m in messages])
+
+        # check that folderish objects with aws files inside works properly.
+        self.conf_sheet._updateProperty('USE_AWS', True)
+        setRoles(self.portal, TEST_USER_ID, ["Manager"])
+        self.portal.invokeFactory('Folder', 'folder')
+        folder = getattr(self.portal, 'folder')
+        fid = folder.invokeFactory('AWSFile', 'aws_file')
+        folder.aws_file.update(file=self._get_image())
+        cp = self.portal.manage_copyObjects(ids=['folder'])
+
+        self.portal.manage_pasteObjects(cb_copy_data=cp)
+
+        folder_copy = getattr(self.portal, 'copy_of_folder')
+        self.assert_('aws_file' in folder_copy.objectIds())
+
+        aws_file = folder.aws_file
+        aws_file_copy = folder_copy.aws_file
+
+        original_source_id = aws_file.getField('file').get(aws_file).source_id
+        copy_source_id = \
+                aws_file_copy.getField('file').get(aws_file_copy).source_id
+
+        self.assertNotEqual(original_source_id, copy_source_id)
+
+        # check file copy handler for folderish objects
+        # when 'aws storage' is turned off.
+        self.conf_sheet._updateProperty('USE_AWS', False)
+
+        cp = self.portal.manage_copyObjects(ids=['folder'])
+
+        folder.manage_pasteObjects(cb_copy_data=cp)
+
+        # ensure that copy object was successfuly removed.
+        self.assert_('copy2_of_folder' not in folder.objectIds())
+
+        messages = IStatusMessage(self.layer['request']).showStatusMessages()
+        error_message = ('Could not copy remote source. To be able to copy '
+                        'object properly, please activate AWS storage')
+        self.assert_(error_message in [m.message for m in messages])
+
+        setRoles(self.portal, TEST_USER_ID, ["Member"])
 
 
 def test_suite():
