@@ -112,11 +112,11 @@ def object_cloned(obj, event):
         container = aq_parent(aq_inner(obj))
         # we have to skip source remove to be able to remove object.
         utils.skip_source_remove(obj.REQUEST)
-        container.manage_delObjects(ids=[obj.getId()])
         catalog.uncatalog_object('/'.join(obj.getPhysicalPath()))
         for brain in catalog(path={'depth': 1,
             'query': '/'.join(obj.getPhysicalPath())}):
             catalog.uncatalog_object(brain.getPath())
+        container.manage_delObjects(ids=[obj.getId()])
 
     request = obj.REQUEST
     try:
