@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.2 - Unreleased
+----------------
+
+ - Fixed source copy handler.
+   [Taras Melnychuk]
+
+ - Fixed aws client error handling.
+   [Taras Melnychuk]
+
 1.1 - April 2, 2013
 -------------------
 
