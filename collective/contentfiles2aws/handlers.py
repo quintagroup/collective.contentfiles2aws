@@ -58,6 +58,10 @@ def clone_source(obj):
         old_sid = aws_file.source_id
         new_sid = utils.replace_source_uid(old_sid, obj.UID())
 
+        if old_sid == new_sid:
+            # source already cloned
+            return
+
         as3client = aws_utility.getFileClient()
         as3client.copy_source(old_sid, new_sid)
         aws_file.source_id = new_sid
