@@ -1,14 +1,18 @@
 Changelog
 =========
 
-1.2 - Unreleased
-----------------
+1.2 - June 5, 2014
+------------------
+
+ - Fixed aws_sources indexer.
+   [Taras Melnychuk]
 
  - Fixed source copy handler.
    [Taras Melnychuk]
 
  - Fixed aws client error handling.
    [Taras Melnychuk]
+
 
 1.1 - April 2, 2013
 -------------------
