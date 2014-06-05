@@ -25,7 +25,8 @@ def aws_sources(obj):
             if IAWSImageField.providedBy(f):
                 for n in f.getAvailableSizes(obj).keys():
                     scale = f.getScale(obj, scale=n)
-                    scale_name = '%s_%s' % (fname, n)
-                    sids[scale_name] = scale.source_id
+                    if isinstance(scale, AWSFile):
+                      scale_name = '%s_%s' % (fname, n)
+                      sids[scale_name] = scale.source_id
     if sids:
         return sids

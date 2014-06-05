@@ -21,7 +21,8 @@ class AWSUtilView(BrowserView):
         if scale:
             name = '%s_%s' % (name, scale)
 
-        if hasattr(brain, 'aws_sources') and brain.aws_sources:
+        if hasattr(brain, 'aws_sources') and brain.aws_sources and \
+           name in brain.aws_sources:
             sid = brain.aws_sources[name]
             aws_utility = getUtility(IAWSFileClientUtility)
             bucket_name = aws_utility.getBucketName()
