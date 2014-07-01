@@ -57,7 +57,8 @@ class AWSStorage(AnnotationStorage):
 
         source_id = self.getSourceId(file_.id(), filename,
                                      instance, fresh=True)
-        as3client.put(source_id, data, mimetype=content_type)
+        as3client.put(source_id, data, mimetype=content_type,
+                      original_name=filename)
         setattr(file_, 'source_id', source_id)
         setattr(file_, 'size', len(data))
         setattr(file_, 'filename', filename)

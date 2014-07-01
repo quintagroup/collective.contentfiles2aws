@@ -1,3 +1,4 @@
+import urllib
 import logging
 from boto.exception import S3CopyError
 from boto.exception import S3ResponseError
@@ -82,10 +83,10 @@ class AWSFileClient(object):
 
         :param filename: name of file.
         :type filename: string
-        :param mimetype: file mimetype.
-        :type mimetype: string.
         :param data: file content.
         :type: string: string
+        :param kw: dictionary with file metadata
+        :type kw: dict
         :returns: None
 
         """
@@ -107,6 +108,16 @@ class AWSFileClient(object):
                 key = bucket.new_key(self._get_key(filename))
             if mimetype:
                 key.set_metadata('Content-Type', mimetype)
+                mtype, msubtype = mimetype.split('/')
+                if mtype != 'image':
+                    # set content disposition metadata with original
+                    # filename for files.
+                    if 'original_name' in kw and kw['original_name']:
+                        fname = urllib.quote(kw['original_name'])
+                    else:
+                        fname = '_'.join(filename.split('_')[3:])
+                    key.set_metadata("Content-Disposition",
+                                     "attachment; filename*=UTF-8''%s" % fname)
             key.set_contents_from_string(data)
             key.set_acl('public-read')
         except S3ResponseError, e:
