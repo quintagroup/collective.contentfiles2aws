@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.2.1 - July 2, 2014
+--------------------
+
+ - Added original file names for files uploaded to amazon.
+   [Taras Melnychuk]
+
+
 1.2 - June 5, 2014
 ------------------
 
