@@ -1,13 +1,16 @@
 import transaction
+from pprint import pformat
 from zope.component import getUtility, queryMultiAdapter
 from Products.Five.browser import BrowserView
 from Products.CMFCore.utils import getToolByName
 from Products.Archetypes.ArchetypeTool import getType
+from Products.contentmigration.walker import CustomQueryWalker
 
 from plone.indexer.interfaces import IIndexableObject
 
 from collective.contentfiles2aws.interfaces import IAWSFileClientUtility
 from collective.contentfiles2aws.interfaces import IAWSField
+from collective.contentfiles2aws.migrations import ATBlobFileToAWSFileMigrator, ATBlobImageToAWSImageMigrator
 
 
 class ContentMigrationView(BrowserView):
@@ -27,7 +30,10 @@ class ContentMigrationView(BrowserView):
                 continue
             if 'schema' in t:
                 for f in t['schema'].fields():
+                    #if 'File' in t['name']:
+                        #import pdb; pdb.set_trace()
                     if IAWSField.providedBy(f):
+                        print t, f
                         tid = type_.id
                         if tid not in types_:
                             types_.append(tid)
@@ -92,3 +98,26 @@ class ContentMigrationView(BrowserView):
                 result += "%s: %d\n" % (ptype, len(pc(**query)))
 
         return result
+
+class ContentToAWSMigrationView(BrowserView):
+    """ Simple browser view for content migration. """
+    def stats(self):
+        results = {}
+        for brain in self.context.portal_catalog():
+            results[brain.portal_type] = results.get(brain.portal_type, 0) + 1
+        return pformat(sorted(results.items()))
+
+    def __call__(self):
+        res = 'State before:\n' + self.stats() + '\n'
+        portal = self.context
+        for migrator in [ATBlobFileToAWSFileMigrator, ATBlobImageToAWSImageMigrator]:
+            walker = CustomQueryWalker(portal, migrator, use_savepoint=True)
+            if self.request.get('limit'):
+                walker.limit = int(self.request.get('limit'))
+            transaction.savepoint(optimistic=True)
+            walker.go()
+            res += walker.getOutput()
+        res += 'State after:\n' + self.stats() + '\n'
+        portal.plone_log(res)
+        return res
+

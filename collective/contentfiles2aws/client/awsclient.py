@@ -146,7 +146,7 @@ class AWSFileClient(object):
     def source_url(self, filename, **kw):
         bucket_name = self._get_bucket_name(**kw)
         return "http://%s.%s/%s" % (bucket_name,
-                                    self.connection.server,
+                                    self.connection.host,
                                     self._get_key(filename))
 
     def copy_source(self, filename, new_filename, **kw):
