@@ -111,7 +111,10 @@ class ContentToAWSMigrationView(BrowserView):
         res = 'State before:\n' + self.stats() + '\n'
         portal = self.context
         for migrator in [ATBlobFileToAWSFileMigrator, ATBlobImageToAWSImageMigrator]:
-            walker = CustomQueryWalker(portal, migrator, use_savepoint=True)
+            max_size = self.request.get('max_size')
+            def callBefore(obj, **kwargs):
+                return obj.get_size() < int(max_size) if max_size else True
+            walker = CustomQueryWalker(portal, migrator, callBefore=callBefore, use_savepoint=True)
             if self.request.get('limit'):
                 walker.limit = int(self.request.get('limit'))
             transaction.savepoint(optimistic=True)
