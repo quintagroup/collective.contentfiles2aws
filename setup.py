@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.3'
+version = '1.3.1'
 
 setup(name='collective.contentfiles2aws',
       version=version,

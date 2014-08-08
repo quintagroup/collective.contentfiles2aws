@@ -18,7 +18,10 @@ class ATBlobFileToAWSFileMigrator(BaseMigrator):
 
     def migrate_data(self):
         value = self.old.getField('file').getAccessor(self.old)()
-        self.new.getField('file').getMutator(self.new)(File(value.filename, '', value.data, value.content_type))
+        filename = value.filename
+        value = File(filename, '', value.data, value.content_type)
+        setattr(value, 'filename', filename)
+        self.new.getField('file').getMutator(self.new)(value)
 
     def finalize(self):
         BaseMigrator.finalize(self)
@@ -38,7 +41,10 @@ class ATBlobImageToAWSImageMigrator(BaseMigrator):
 
     def migrate_data(self):
         value = self.old.getField('image').getAccessor(self.old)()
-        self.new.getField('image').getMutator(self.new)(File(value.filename, '', value.data, value.content_type))
+        filename = value.filename
+        value = File(filename, '', value.data, value.content_type)
+        setattr(value, 'filename', filename)
+        self.new.getField('image').getMutator(self.new)(value)
 
     def finalize(self):
         BaseMigrator.finalize(self)
