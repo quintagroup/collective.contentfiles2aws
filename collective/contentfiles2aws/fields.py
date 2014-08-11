@@ -45,7 +45,10 @@ class AWSFileField(FileField):
     security = ClassSecurityInfo()
 
     def getFilename(self, instance, fromBaseUnit=True):
-        return self.get(instance).filename
+        awsfile = self.get(instance)
+        if awsfile:
+            return awsfile.filename
+        return super(AWSFileField, self).getFilename(instance, fromBaseUnit)
 
     def use_aws(self, instance):
         pp = getToolByName(instance, 'portal_properties')
