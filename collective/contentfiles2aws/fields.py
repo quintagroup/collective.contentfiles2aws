@@ -44,7 +44,7 @@ class AWSFileField(FileField):
 
     security = ClassSecurityInfo()
 
-    def getFilename(self, instance):
+    def getFilename(self, instance, fromBaseUnit=True):
         return self.get(instance).filename
 
     def use_aws(self, instance):
